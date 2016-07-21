@@ -82,6 +82,8 @@
 
 #define CONFIG_MXC_UART
 
+#define CONFIG_CMD_GPIO
+
 #define CONFIG_CMD_FUSE
 #ifdef CONFIG_CMD_FUSE
 #define CONFIG_MXC_OCOTP
