@@ -52,7 +52,14 @@
 #endif
 #endif /*CONFIG_FSL_FASTBOOT*/
 
+#include "gf_mux.h"
+#include "gf_eeprom.h"
+#include "gf_eeprom_port.h"
+
 DECLARE_GLOBAL_DATA_PTR;
+
+#define PWR_5V0_EN_3V3_GPIO		IMX_GPIO_NR(1,3)
+#define VIO_3V3_EN				IMX_GPIO_NR(6,14)
 
 #define UART_PAD_CTRL  (PAD_CTL_PUS_100K_UP |			\
 	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm |			\
@@ -946,7 +953,14 @@ int board_ehci_power(int port, int on)
 
 int board_early_init_f(void)
 {
-	setup_iomux_uart();
+	if (is_boot_from_usb()) {
+		egf_board_mux_init(PROGRAMMER_MUX_MODE);
+		printf("Is boot from usb! \n");
+	}
+	else {
+		egf_board_mux_init(APPLICATION_MUX_MODE);
+		printf("Is boot from usb! \n");
+	}
 #if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
 #endif
@@ -956,8 +970,23 @@ int board_early_init_f(void)
 
 int board_init(void)
 {
+	char * egf_sw_id_code;
+	int ret;
+
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
+
+	if (!is_boot_from_usb())
+	{
+		ret = gf_load_som_revision(&egf_sw_id_code,0);
+		if (ret)
+		{
+			printf("System Hang.\n");
+			while(1);
+		}
+	}
+
+	return 0;
 
 #ifdef CONFIG_MXC_SPI
 	setup_spi();

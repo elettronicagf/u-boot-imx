@@ -525,6 +525,8 @@
 #define CONFIG_USB_MAX_CONTROLLER_COUNT	1 /* Enabled USB controller number */
 #endif
 
+#define EEPROM_nWP_GPIO (IMX_GPIO_NR(1, 27))
+
 /*#define CONFIG_SPLASH_SCREEN*/
 /*#define CONFIG_MXC_EPDC*/
 
