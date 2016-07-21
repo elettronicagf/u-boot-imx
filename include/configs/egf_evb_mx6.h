@@ -34,6 +34,8 @@
 #elif defined(CONFIG_MX6SOLO)
 #define CONFIG_DEFAULT_FDT_FILE	"imx6dl-sabresd.dtb"
 #define PHYS_SDRAM_SIZE		(512u * 1024 * 1024)
+#else
+#define CONFIG_DEFAULT_FDT_FILE	"test.dtb"
 #endif
 
 
