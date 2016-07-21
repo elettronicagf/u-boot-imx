@@ -504,6 +504,16 @@ int board_ehci_power(int port, int on)
 }
 #endif
 
+static void setup_eeprom(void){
+	/* Set EEPROM write protected */
+	gpio_direction_output(EEPROM_nWP_GPIO,0);
+}
+
+static void setup_power_management(void){
+	gpio_direction_output(PWR_5V0_EN_3V3_GPIO,1);
+	gpio_direction_output(VIO_3V3_EN,1);
+}
+
 int board_early_init_f(void)
 {
 	if (is_boot_from_usb()) {
@@ -514,6 +524,9 @@ int board_early_init_f(void)
 		egf_board_mux_init(APPLICATION_MUX_MODE);
 		printf("Is boot from usb! \n");
 	}
+	setup_power_management();
+	setup_eeprom();
+
 #if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
 #endif
