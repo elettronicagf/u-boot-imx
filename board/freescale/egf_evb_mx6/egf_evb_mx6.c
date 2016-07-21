@@ -36,7 +36,6 @@
 #include <power/pfuze100_pmic.h>
 #include "../common/pfuze.h"
 #include <usb.h>
-
 #if defined(CONFIG_MX6DL) && defined(CONFIG_MXC_EPDC)
 #include <lcd.h>
 #include <mxc_epdc_fb.h>
@@ -230,33 +229,8 @@ void board_late_mmc_env_init(void)
 	run_command(cmd, 0);
 }
 
-int mx6_rgmii_rework(struct phy_device *phydev)
-{
-	unsigned short val;
-
-	/* To enable AR8031 ouput a 125MHz clk from CLK_25M */
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
-
-	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
-	val &= 0xffe3;
-	val |= 0x18;
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val);
-
-	/* introduce tx clock delay */
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x5);
-	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
-	val |= 0x0100;
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val);
-
-	return 0;
-}
-
 int board_phy_config(struct phy_device *phydev)
 {
-	mx6_rgmii_rework(phydev);
-
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
 
@@ -429,8 +403,11 @@ int board_eth_init(bd_t *bis)
 		    printf("Error fec anatop clock settings!\n");
 	}
 
-	setup_iomux_enet();
-	setup_pcie();
+	/* Reset AR8035 PHY */
+	gpio_direction_output(IMX_GPIO_NR(1, 25),0);
+	udelay (500);
+	gpio_set_value(IMX_GPIO_NR(1, 25), 1);
+	udelay (500);
 
 	return cpu_eth_init(bis);
 }
