@@ -19,6 +19,7 @@
 #include <asm/errno.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/crm_regs.h>
+#include <asm/arch/sys_proto.h>
 #include <div64.h>
 #include "ipu.h"
 #include "ipu_regs.h"
@@ -196,8 +197,32 @@ static void clk_ipu_disable(struct clk *clk)
 	__raw_writel(reg, &mxc_ccm->clpcr);
 #endif
 }
+#ifdef CONFIG_TARGET_MX6EGFEVB
+// ipu_clk for i.MX6 solo and dual lite parts
+static struct clk ipu_clk_sdl = {
+	.name = "ipu_clk",
+	.rate = 198000000,
+	.enable_reg = (u32 *)(CCM_BASE_ADDR +
+		offsetof(struct mxc_ccm_reg, CCGR3)),
+	.enable_shift = MXC_CCM_CCGR3_IPU1_IPU_DI0_OFFSET,
+	.enable = clk_ipu_enable,
+	.disable = clk_ipu_disable,
+	.usecount = 0,
+};
 
-
+// ipu_clk for i.MX6 dual and quad parts
+static struct clk ipu_clk_qd = {
+	.name = "ipu_clk",
+	.rate = 264000000,
+	.enable_reg = (u32 *)(CCM_BASE_ADDR +
+		offsetof(struct mxc_ccm_reg, CCGR3)),
+	.enable_shift = MXC_CCM_CCGR3_IPU1_IPU_DI0_OFFSET,
+	.enable = clk_ipu_enable,
+	.disable = clk_ipu_disable,
+	.usecount = 0,
+};
+#else
+// ipu_clk for all other parts
 static struct clk ipu_clk = {
 	.name = "ipu_clk",
 	.rate = CONFIG_IPUV3_CLK,
@@ -214,6 +239,7 @@ static struct clk ipu_clk = {
 	.disable = clk_ipu_disable,
 	.usecount = 0,
 };
+#endif
 
 #if defined(CONFIG_MX6) || defined(CONFIG_MX53)
 static int clk_ldb_clk_enable(struct clk *clk)
@@ -525,8 +551,15 @@ int ipu_probe(void)
 	g_pixel_clk[0] = &pixel_clk[0];
 	g_pixel_clk[1] = &pixel_clk[1];
 
-	g_ipu_clk = &ipu_clk;
-	debug("ipu_clk = %u\n", clk_get_rate(g_ipu_clk));
+#ifdef CONFIG_TARGET_MX6EGFEVB
+	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+		g_ipu_clk = &ipu_clk_qd;
+	else
+		g_ipu_clk = &ipu_clk_sdl;
+#else
+		g_ipu_clk = &ipu_clk;
+#endif
+	printf("ipu_clk = %u\n", clk_get_rate(g_ipu_clk));
 #if defined(CONFIG_MX6) || defined(CONFIG_MX53)
 	g_ldb_clk[0] = &ldb_clk[0];
 	g_ldb_clk[1] = &ldb_clk[1];
