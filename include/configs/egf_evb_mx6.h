@@ -379,14 +379,19 @@
 #define CONFIG_LIBATA
 #endif
 
+#define CONFIG_SYS_USE_SPINOR
 #ifdef CONFIG_SYS_USE_SPINOR
 #define CONFIG_CMD_SF
 #define CONFIG_SPI_FLASH
-#define CONFIG_SPI_FLASH_STMICRO
+#define CONFIG_SPI_FLASH_BAR
+#define CONFIG_SPI_FLASH_SPANSION
 #define CONFIG_MXC_SPI
-#define CONFIG_SF_DEFAULT_BUS  0
-#define CONFIG_SF_DEFAULT_SPEED 20000000
+#define CONFIG_SF_DEFAULT_BUS  3
+#define CONFIG_SF_DEFAULT_SPEED 15000000
 #define CONFIG_SF_DEFAULT_MODE (SPI_MODE_0)
+#define CONFIG_SF_CS_GPIO			IMX_GPIO_NR(5, 2)
+#define CONFIG_SF_DEFAULT_CS		1
+#define CONFIG_SF_WPn_GPIO			IMX_GPIO_NR(3, 26)  /* GPIO3_IO26 */
 #endif
 
 #ifdef CONFIG_SYS_USE_EIMNOR
@@ -483,10 +488,6 @@
 #define CONFIG_SYS_FSL_USDHC_NUM	2 	/* SD1 SD - SD2 WiFi - SD3 eMMC */
 #define CONFIG_SYS_MMC_ENV_DEV		1	/* SDHC3 */
 #define CONFIG_SYS_MMC_ENV_PART                0       /* user partition */
-
-#ifdef CONFIG_SYS_USE_SPINOR
-#define CONFIG_SF_DEFAULT_CS   0
-#endif
 
 /*
  * imx6 q/dl/solo pcie would be failed to work properly in kernel, if

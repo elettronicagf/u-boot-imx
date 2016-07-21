@@ -69,14 +69,6 @@ int dram_init(void)
 	return 0;
 }
 
-#ifdef CONFIG_MXC_SPI
-int board_spi_cs_gpio(unsigned bus, unsigned cs)
-{
-	return (bus == 0 && cs == 0) ? (IMX_GPIO_NR(4, 9)) : -1;
-}
-#endif
-
-
 static void enable_rgb(struct display_info_t const *dev)
 {
 	gpio_direction_output(DISP0_PWR_EN, 1);
@@ -455,6 +447,18 @@ int board_ehci_power(int port, int on)
 }
 #endif
 
+#ifdef CONFIG_MXC_SPI
+static void setup_spinor(void ){
+	gpio_direction_output(CONFIG_SF_CS_GPIO, 0);
+	gpio_direction_output(CONFIG_SF_WPn_GPIO,0); //write protection on
+}
+
+int board_spi_cs_gpio(unsigned bus, unsigned cs)
+{
+	return (bus == 3 && cs == 1) ? (CONFIG_SF_CS_GPIO) : -1;
+}
+#endif
+
 static void setup_eeprom(void){
 	/* Set EEPROM write protected */
 	gpio_direction_output(EEPROM_nWP_GPIO,0);
@@ -481,7 +485,9 @@ int board_early_init_f(void)
 #if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
 #endif
-
+#ifdef CONFIG_MXC_SPI
+	setup_spinor();
+#endif
 	return 0;
 }
 
