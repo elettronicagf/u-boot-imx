@@ -478,7 +478,7 @@
 #include "mx6sabreandroid_common.h"
 #endif
 
-#define CONFIG_SYS_FSL_USDHC_NUM	3
+#define CONFIG_SYS_FSL_USDHC_NUM	2 	/* SD1 SD - SD2 WiFi - SD3 eMMC */
 #define CONFIG_SYS_MMC_ENV_DEV		1	/* SDHC3 */
 #define CONFIG_SYS_MMC_ENV_PART                0       /* user partition */
 
