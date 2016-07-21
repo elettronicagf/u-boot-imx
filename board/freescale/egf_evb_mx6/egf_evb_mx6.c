@@ -35,7 +35,6 @@
 #include <power/pmic.h>
 #include <power/pfuze100_pmic.h>
 #include "../common/pfuze.h"
-#include <asm/arch/mx6-ddr.h>
 #include <usb.h>
 
 #if defined(CONFIG_MX6DL) && defined(CONFIG_MXC_EPDC)
@@ -1347,6 +1346,7 @@ void board_recovery_setup(void)
 #endif /*CONFIG_FSL_FASTBOOT*/
 
 #ifdef CONFIG_SPL_BUILD
+#include <asm/arch/mx6-ddr.h>
 #include <spl.h>
 #include <libfdt.h>
 
