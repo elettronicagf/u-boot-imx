@@ -149,6 +149,9 @@ struct spi_flash_params {
 
 extern const struct spi_flash_params spi_flash_params_table[];
 
+/* Enabled/disable write by driving SRWD bit of SR1 register */
+int spi_flash_cmd_lock_enable(struct spi_flash *flash, u8 enabled);
+
 /* Send a single-byte command to the device and read the response */
 int spi_flash_cmd(struct spi_slave *spi, u8 cmd, void *response, size_t len);
 
