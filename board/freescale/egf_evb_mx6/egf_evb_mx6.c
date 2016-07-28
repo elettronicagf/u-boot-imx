@@ -53,6 +53,9 @@
 #include "gf_mux.h"
 #include "gf_eeprom.h"
 #include "gf_eeprom_port.h"
+#ifdef CONFIG_SPL_BUILD
+#include "gf_ddr_parameters.h"
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -858,79 +861,103 @@ void board_recovery_setup(void)
 #include <spl.h>
 #include <libfdt.h>
 
-const struct mx6dq_iomux_ddr_regs mx6_ddr_ioregs = {
-	.dram_sdclk_0 =  0x00020030,
-	.dram_sdclk_1 =  0x00020030,
-	.dram_cas =  0x00020030,
-	.dram_ras =  0x00020030,
-	.dram_reset =  0x00020030,
-	.dram_sdcke0 =  0x00003000,
-	.dram_sdcke1 =  0x00003000,
-	.dram_sdba2 =  0x00000000,
-	.dram_sdodt0 =  0x00003030,
-	.dram_sdodt1 =  0x00003030,
-	.dram_sdqs0 =  0x00000030,
-	.dram_sdqs1 =  0x00000030,
-	.dram_sdqs2 =  0x00000030,
-	.dram_sdqs3 =  0x00000030,
-	.dram_sdqs4 =  0x00000030,
-	.dram_sdqs5 =  0x00000030,
-	.dram_sdqs6 =  0x00000030,
-	.dram_sdqs7 =  0x00000030,
-	.dram_dqm0 =  0x00020030,
-	.dram_dqm1 =  0x00020030,
-	.dram_dqm2 =  0x00020030,
-	.dram_dqm3 =  0x00020030,
-	.dram_dqm4 =  0x00020030,
-	.dram_dqm5 =  0x00020030,
-	.dram_dqm6 =  0x00020030,
-	.dram_dqm7 =  0x00020030,
+/* SW REVISIONS*/
+#define REV_WID0510_AA0101 "WID0510_AA01.01"
+#define REV_WID0510_AB0101 "WID0510_AB01.01"
+#define REV_WID0510_AC0101 "WID0510_AC01.01"
+
+#define MT41K128M16JT_125 		1
+#define MT41K256M16HA_125 		2
+#define DDR_BUS_WIDTH_16BIT		16
+#define DDR_BUS_WIDTH_32BIT		32
+#define DDR_BUS_WIDTH_64BIT		64
+
+struct egf_som {
+	int ram_model;
+	int ram_bus_width;
+	int ram_cs_used;
+	void * iomux_ddr_regs;
+	void * iomux_grp_regs;
+	void * mmdc_calibration;
 };
 
-const struct mx6dq_iomux_grp_regs mx6_grp_ioregs = {
-	.grp_ddr_type =  0x000C0000,
-	.grp_ddrmode_ctl =  0x00020000,
-	.grp_ddrpke =  0x00000000,
-	.grp_addds =  0x00000030,
-	.grp_ctlds =  0x00000030,
-	.grp_ddrmode =  0x00020000,
-	.grp_b0ds =  0x00000030,
-	.grp_b1ds =  0x00000030,
-	.grp_b2ds =  0x00000030,
-	.grp_b3ds =  0x00000030,
-	.grp_b4ds =  0x00000030,
-	.grp_b5ds =  0x00000030,
-	.grp_b6ds =  0x00000030,
-	.grp_b7ds =  0x00000030,
+static struct egf_som __attribute__((section (".data"))) the_som;
+
+static struct egf_som the_som_WID_0510_AA0101 = {
+		MT41K128M16JT_125,
+		DDR_BUS_WIDTH_32BIT,
+		1,
+		&mx6sdl_ddr_ioregs_standard,
+		&mx6sdl_grp_ioregs_standard,
+		&mx6sdl_128x16_mmdc_calib_default,
 };
 
-const struct mx6_mmdc_calibration mx6_mmcd_calib = {
-	.p0_mpwldectrl0 =  0x001F001F,
-	.p0_mpwldectrl1 =  0x001F001F,
-	.p1_mpwldectrl0 =  0x00440044,
-	.p1_mpwldectrl1 =  0x00440044,
-	.p0_mpdgctrl0 =  0x434B0350,
-	.p0_mpdgctrl1 =  0x034C0359,
-	.p1_mpdgctrl0 =  0x434B0350,
-	.p1_mpdgctrl1 =  0x03650348,
-	.p0_mprddlctl =  0x4436383B,
-	.p1_mprddlctl =  0x39393341,
-	.p0_mpwrdlctl =  0x35373933,
-	.p1_mpwrdlctl =  0x48254A36,
+static struct egf_som the_som_WID_0510_AB0101 = {
+		MT41K128M16JT_125,
+		DDR_BUS_WIDTH_32BIT,
+		1,
+		&mx6dq_ddr_ioregs_standard,
+		&mx6dq_grp_ioregs_standard,
+		&mx6dq_128x16_mmdc_calib_default,
 };
 
-static struct mx6_ddr3_cfg mem_ddr = {
-	.mem_speed = 1600,
-	.density = 4,
-	.width = 64,
-	.banks = 8,
-	.rowaddr = 14,
-	.coladdr = 10,
-	.pagesz = 2,
-	.trcd = 1375,
-	.trcmin = 4875,
-	.trasmin = 3500,
+static struct egf_som the_som_WID_0510_AC0101 = {
+		MT41K128M16JT_125,
+		DDR_BUS_WIDTH_64BIT,
+		1,
+		&mx6sdl_ddr_ioregs_standard,
+		&mx6sdl_grp_ioregs_standard,
+		&mx6sdl_128x16_mmdc_calib_x64,
 };
+
+static int gf_strcmp(const char * cs, const char * ct) {
+	register signed char __res;
+
+	while (1) {
+		if ((__res = *cs - *ct++) != 0 || !*cs++)
+			break;
+	}
+
+	return __res;
+}
+
+int load_revision(void)
+{
+	char * egf_sw_id_code;
+	int ret;
+
+	ret = gf_load_som_revision(&egf_sw_id_code,0);
+	if (ret)
+	{
+		printf("System Hang.\n");
+		while(1);
+ 	}
+
+	if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AA0101))
+	{
+		/* SW Revision is WID0510_AA01.01 */
+		printf("GF Software ID Code: WID0510_AA01.01\n");
+		memcpy(&the_som, &the_som_WID_0510_AA0101, sizeof(the_som));
+	}
+	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AB0101))
+	{
+		/* SW Revision is WID0510_AB01.01 */
+		printf("GF Software ID Code: WID0510_AB01.01\n");
+		memcpy(&the_som, &the_som_WID_0510_AB0101, sizeof(the_som));
+	}
+	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AC0101))
+	{
+		/* SW Revision is WID0510_AC01.01 */
+		printf("GF Software ID Code: WID0510_AC01.01\n");
+		memcpy(&the_som, &the_som_WID_0510_AC0101, sizeof(the_som));
+	}
+	else {
+		printf("Unrecognized EGF SW ID Code: %s\n",egf_sw_id_code);
+		printf("System Hang.\n");
+		while(1);
+	}
+	return 0;
+}
 
 static void ccgr_init(void)
 {
@@ -962,13 +989,15 @@ static void gpr_init(void)
  */
 static void spl_dram_init(void)
 {
+	struct mx6_ddr3_cfg *memory_timings = NULL;
+	struct mx6_mmdc_calibration *memory_calib = NULL;
 	struct mx6_ddr_sysinfo sysinfo = {
 		/* width of data bus:0=16,1=32,2=64 */
-		.dsize = mem_ddr.width/32,
+		.dsize = the_som.ram_bus_width/32,
 		/* config for full 4GB range so that get_mem_size() works */
 		.cs_density = 32, /* 32Gb per CS */
 		/* single chip select */
-		.ncs = 1,
+		.ncs = the_som.ram_cs_used,
 		.cs1_mirror = 0,
 		.rtt_wr = 1 /*DDR3_RTT_60_OHM*/,	/* RTT_Wr = RZQ/4 */
 #ifdef RTT_NOM_120OHM
@@ -984,8 +1013,48 @@ static void spl_dram_init(void)
 		.rst_to_cke = 0x23,	/* 33 cycles, 500us (JEDEC default) */
 	};
 
-	mx6dq_dram_iocfg(mem_ddr.width, &mx6_ddr_ioregs, &mx6_grp_ioregs);
-	mx6_dram_cfg(&sysinfo, &mx6_mmcd_calib, &mem_ddr);
+	/*
+	 * MMDC Calibration requires the following data:
+	 *   mx6_mmdc_calibration - board-specific calibration (routing delays)
+	 *      these calibration values depend on board routing, SoC, and DDR
+	 *   mx6_ddr_sysinfo - board-specific memory architecture (width/cs/etc)
+	 *   mx6_ddr_cfg - chip specific timing/layout details
+	 */
+	switch(the_som.ram_model)
+	{
+	case MT41K128M16JT_125:
+		memory_timings = &mt41k128m16jt_125;
+		break;
+	case MT41K256M16HA_125:
+		memory_timings = &mt41k256m16ha_125;
+		break;
+	default:
+		puts("Error: Invalid Memory Configuration\n");
+		hang();
+	}
+
+	memory_calib = the_som.mmdc_calibration;
+
+	if (!memory_timings) {
+		puts("Error: Invalid Memory Configuration\n");
+		hang();
+	}
+	if (!memory_calib) {
+		puts("Error: Invalid Board Calibration Configuration\n");
+		hang();
+	}
+
+	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
+	{
+		mx6dq_dram_iocfg(the_som.ram_bus_width, (struct mx6dq_iomux_ddr_regs *)the_som.iomux_ddr_regs,
+					 (struct mx6dq_iomux_grp_regs *)the_som.iomux_grp_regs);
+	} else
+	{
+		mx6sdl_dram_iocfg(the_som.ram_bus_width, (struct mx6sdl_iomux_ddr_regs *)the_som.iomux_ddr_regs,
+					 (struct mx6sdl_iomux_grp_regs *)the_som.iomux_grp_regs);
+	}
+	mx6_dram_cfg(&sysinfo, memory_calib, memory_timings);
+}
 }
 
 void board_init_f(ulong dummy)
@@ -1004,6 +1073,13 @@ void board_init_f(ulong dummy)
 
 	/* UART clocks enabled and gd valid - init serial console */
 	preloader_console_init();
+
+
+
+	if (!is_boot_from_usb()) {
+		/* Carica EEPROM */
+		load_revision();
+	}
 
 	/* DDR initialization */
 	spl_dram_init();
