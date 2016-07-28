@@ -38,6 +38,7 @@
 #define CONFIG_DEFAULT_FDT_FILE	"test.dtb"
 #endif
 
+#define CONFIG_CMD_INIT_EEPROM
 
 #define CONFIG_MX6
 

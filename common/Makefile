@@ -113,6 +113,7 @@ obj-$(CONFIG_CMD_HASH) += cmd_hash.o
 obj-$(CONFIG_CMD_IDE) += cmd_ide.o
 obj-$(CONFIG_CMD_IMMAP) += cmd_immap.o
 obj-$(CONFIG_CMD_INI) += cmd_ini.o
+obj-$(CONFIG_CMD_INIT_EEPROM) += cmd_init_eeprom.o
 obj-$(CONFIG_CMD_IRQ) += cmd_irq.o
 obj-$(CONFIG_CMD_ITEST) += cmd_itest.o
 obj-$(CONFIG_CMD_JFFS2) += cmd_jffs2.o
