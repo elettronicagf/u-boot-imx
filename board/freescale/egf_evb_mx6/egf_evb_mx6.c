@@ -59,6 +59,8 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#define WID_LENGTH					15
+#define EGF_FDT_FILE_NAME_LENGTH	(13 + WID_LENGTH + 1)
 #define PWR_5V0_EN_3V3_GPIO		IMX_GPIO_NR(1,3)
 #define VIO_3V3_EN				IMX_GPIO_NR(6,14)
 
@@ -70,6 +72,29 @@ int dram_init(void)
 {
 	gd->ram_size = imx_ddr_size();
 	return 0;
+}
+
+void prepare_boot_env(void)
+{
+	char * egf_sw_id_code;
+	char* mac_address;
+	char fdt_file_name[EGF_FDT_FILE_NAME_LENGTH];
+
+	egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
+	fdt_file_name[0] = 0;
+	gf_strcat(fdt_file_name, "imx6-egf-");
+	gf_strcat(fdt_file_name, egf_sw_id_code);
+	gf_strcat(fdt_file_name, ".dtb");
+
+	setenv("fdt_file",fdt_file_name);
+
+	mac_address = gf_eeprom_get_mac1_address();
+	if (mac_address == NULL)
+			printf("MAC Address not programmed.\n");
+	else
+	{
+		setenv("ethaddr",mac_address);
+	}
 }
 
 static void enable_rgb(struct display_info_t const *dev)
@@ -720,6 +745,9 @@ static const struct boot_mode board_boot_modes[] = {
 
 int board_late_init(void)
 {
+	if (!is_boot_from_usb())
+		prepare_boot_env();
+
 #ifdef CONFIG_CMD_BMODE
 	add_board_boot_modes(board_boot_modes);
 #endif
