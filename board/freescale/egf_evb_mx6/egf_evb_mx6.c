@@ -1043,10 +1043,66 @@ static void spl_dram_init(void)
 	}
 	mx6_dram_cfg(&sysinfo, memory_calib, memory_timings);
 }
+
+static void fix_clocks(void)
+{
+	struct mxc_ccm_reg *ccm_regs = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
+	u32 reg;
+
+	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D)){
+		//Switch periph_clk2_sel to OSC
+		reg = readl(&ccm_regs->cbcmr);
+		reg &= ~MXC_CCM_CBCMR_PERIPH_CLK2_SEL_MASK;
+		reg |= 1 << MXC_CCM_CBCMR_PERIPH_CLK2_SEL_OFFSET;
+		writel(reg, &ccm_regs->cbcmr);
+		//Switch periph_clk_sel to periph_clk2
+		reg = readl(&ccm_regs->cbcdr);
+		reg |= MXC_CCM_CBCDR_PERIPH_CLK_SEL;
+		writel(reg, &ccm_regs->cbcdr);
+		//Wait till busy bits clear
+		while((readl(&ccm_regs->cdhipr) & 0x3F) != 0);
+		//Set pre_periph_clk_sel to PLL2
+		reg = readl(&ccm_regs->cbcmr);
+		reg &= ~MXC_CCM_CBCMR_PRE_PERIPH_CLK_SEL_MASK;
+		writel(reg, &ccm_regs->cbcmr);
+		//Switch back periph_clk_sel to pre_periph_clk
+		reg = readl(&ccm_regs->cbcdr);
+		reg &= ~MXC_CCM_CBCDR_PERIPH_CLK_SEL;
+		writel(reg, &ccm_regs->cbcdr);
+		//Wait for busy bits to clear
+		while((readl(&ccm_regs->cdhipr) & 0x3F) != 0);
+	} else {
+		//Switch periph_clk2_sel to OSC
+		reg = readl(&ccm_regs->cbcmr);
+		reg &= ~MXC_CCM_CBCMR_PERIPH_CLK2_SEL_MASK;
+		reg |= 1 << MXC_CCM_CBCMR_PERIPH_CLK2_SEL_OFFSET;
+		writel(reg, &ccm_regs->cbcmr);
+		//Switch periph_clk_sel to periph_clk2
+		reg = readl(&ccm_regs->cbcdr);
+		reg |= MXC_CCM_CBCDR_PERIPH_CLK_SEL;
+		writel(reg, &ccm_regs->cbcdr);
+		//Wait for busy bits to clear
+		while((readl(&ccm_regs->cdhipr) & 0x3F) != 0);
+		//Set pre_periph_clk_sel to PLL2 PFD2
+		reg = readl(&ccm_regs->cbcmr);
+		reg &= ~MXC_CCM_CBCMR_PRE_PERIPH_CLK_SEL_MASK;
+		reg |= 1 << MXC_CCM_CBCMR_PRE_PERIPH_CLK_SEL_OFFSET;
+		writel(reg, &ccm_regs->cbcmr);
+		//Set AHB_PODF to 3
+		reg = readl(&ccm_regs->cbcdr);
+		reg &= ~MXC_CCM_CBCDR_AHB_PODF_MASK;
+		reg |= (0x2) << MXC_CCM_CBCDR_AHB_PODF_OFFSET;
+		//Set periph_clk_sel to pll2
+		reg &= ~MXC_CCM_CBCDR_PERIPH_CLK_SEL;
+		writel(reg, &ccm_regs->cbcdr);
+		//Wait for busy bits to clear
+		while((readl(&ccm_regs->cdhipr) & 0x1003F) != 0);
+	}
 }
 
 void board_init_f(ulong dummy)
 {
+	fix_clocks();
 	/* setup AIPS and disable watchdog */
 	arch_cpu_init();
 
