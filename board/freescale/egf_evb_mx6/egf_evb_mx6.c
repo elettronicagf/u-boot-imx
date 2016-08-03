@@ -56,11 +56,11 @@
 #ifdef CONFIG_SPL_BUILD
 #include "gf_ddr_parameters.h"
 #endif
-
 DECLARE_GLOBAL_DATA_PTR;
 
 #define WID_LENGTH					15
 #define EGF_FDT_FILE_NAME_LENGTH	(13 + WID_LENGTH + 1)
+
 #define PWR_5V0_EN_3V3_GPIO		IMX_GPIO_NR(1,3)
 #define VIO_3V3_EN				IMX_GPIO_NR(6,14)
 
@@ -1117,8 +1117,6 @@ void board_init_f(ulong dummy)
 	/* UART clocks enabled and gd valid - init serial console */
 	preloader_console_init();
 
-
-
 	if (!is_boot_from_usb()) {
 		/* Carica EEPROM */
 		load_revision();
@@ -1138,3 +1136,82 @@ void reset_cpu(ulong addr)
 {
 }
 #endif
+
+#ifdef CONFIG_CFB_CONSOLE
+# ifdef CONFIG_CONSOLE_EXTRA_INFO
+# include <video_fb.h>
+extern GraphicDevice smi;
+
+void video_get_info_str (int line_number, char *info)
+{
+	u32 cpurev;
+	char * egf_sw_id_code;
+	char * egf_serial_number;
+	char * egf_product_code;
+
+	if (!is_boot_from_usb())
+	{
+		switch (line_number) {
+		case 1:
+			sprintf (info, " ");
+			return;
+		case 2:
+			sprintf (info, " Elettronica GF s.r.l.");
+			return;
+		case 3:
+			cpurev = get_cpu_rev();
+			sprintf (info, " CPU: Freescale i.MX%s rev%d.%d at %d MHz",
+					get_imx_type((cpurev & 0xFF000) >> 12),
+					(cpurev & 0x000F0) >> 4,
+					(cpurev & 0x0000F) >> 0,
+					mxc_get_clock(MXC_ARM_CLK) / 1000000);
+			return;
+		case 4:
+			sprintf (info, " DRAM: %d MiB", imx_ddr_size() / (1024 * 1024));
+			return;
+		case 5:
+			egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
+			if(egf_sw_id_code)
+				sprintf (info, " WID: %s", egf_sw_id_code);
+			return;
+		case 6:
+			egf_product_code = gf_eeprom_get_som_code();
+			if(egf_product_code)
+				sprintf (info, " Model: %s", egf_product_code);
+			return;
+		case 7:
+			egf_serial_number = gf_eeprom_get_som_serial_number();
+			if(egf_serial_number)
+				sprintf (info, " Board SN: %s", egf_serial_number);
+			return;
+		default:
+			break;
+		}
+	} else {
+		switch (line_number) {
+		case 1:
+			sprintf (info, " ");
+			return;
+		case 2:
+			sprintf (info, " Programmazione SPL e u-boot su SPI");
+			return;
+		case 3:
+			sprintf (info, " NOR Flash in corso...");
+			return;
+		case 4:
+			sprintf (info, " Lo spegnimento del display indica il");
+			return;
+		case 5:
+			sprintf (info, " completamento della programmazione.");
+			return;
+		default:
+			break;
+		}
+	}
+	/* no more info lines */
+	*info = 0;
+	return;
+}
+# endif	/* CONFIG_CONSOLE_EXTRA_INFO */
+#endif	/* CONFIG_CFB_CONSOLE */
+
