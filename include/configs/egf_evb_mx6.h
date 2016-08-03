@@ -227,6 +227,7 @@
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS \
 	"locknor=sf probe;gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";sf lock;gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";\0" \
+	"unlocknor=sf probe;gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";sf unlock; ;\0" \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
 	"fdt_addr=0x18000000\0" \
