@@ -270,12 +270,6 @@ static void disable_lvds(struct display_info_t const *dev)
 	writel(reg, &iomux->gpr[2]);
 }
 
-static void do_enable_hdmi(struct display_info_t const *dev)
-{
-	disable_lvds(dev);
-	imx_enable_hdmi_phy();
-}
-
 static void enable_lvds(struct display_info_t const *dev)
 {
 	struct iomuxc *iomux = (struct iomuxc *)
@@ -307,26 +301,6 @@ struct display_info_t const displays[] = {{
 		.sync           = FB_SYNC_EXT,
 		.vmode          = FB_VMODE_NONINTERLACED
 } }, {
-	.bus	= -1,
-	.addr	= 0,
-	.pixfmt	= IPU_PIX_FMT_RGB24,
-	.detect	= NULL,
-	.enable	= do_enable_hdmi,
-	.mode	= {
-		.name           = "HDMI",
-		.refresh        = 60,
-		.xres           = 640,
-		.yres           = 480,
-		.pixclock       = 39721,
-		.left_margin    = 48,
-		.right_margin   = 16,
-		.upper_margin   = 33,
-		.lower_margin   = 10,
-		.hsync_len      = 96,
-		.vsync_len      = 2,
-		.sync           = 0,
-		.vmode          = FB_VMODE_NONINTERLACED
-} }, {
 	.bus	= 0,
 	.addr	= 0,
 	.pixfmt	= IPU_PIX_FMT_RGB24,
@@ -356,7 +330,6 @@ static void setup_display(void)
 	int reg;
 
 	enable_ipu_clock();
-	imx_setup_hdmi();
 
 	/* Turn on LDB0, LDB1, IPU,IPU DI0 clocks */
 	reg = readl(&mxc_ccm->CCGR3);
