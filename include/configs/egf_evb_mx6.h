@@ -22,21 +22,6 @@
 #define CONFIG_MXC_UART_BASE	UART2_BASE
 #define CONFIG_CONSOLE_DEV		"ttymxc1"
 #define CONFIG_MMCROOT			"/dev/mmcblk2p2"  /* SDHC3 */
-#if defined(CONFIG_MX6QP)
-#define CONFIG_DEFAULT_FDT_FILE	"imx6qp-sabresd.dtb"
-#define PHYS_SDRAM_SIZE		(1u * 1024 * 1024 * 1024)
-#elif defined(CONFIG_MX6Q)
-#define CONFIG_DEFAULT_FDT_FILE	"imx6q-sabresd.dtb"
-#define PHYS_SDRAM_SIZE		(1u * 1024 * 1024 * 1024)
-#elif defined(CONFIG_MX6DL)
-#define CONFIG_DEFAULT_FDT_FILE	"imx6dl-sabresd.dtb"
-#define PHYS_SDRAM_SIZE		(1u * 1024 * 1024 * 1024)
-#elif defined(CONFIG_MX6SOLO)
-#define CONFIG_DEFAULT_FDT_FILE	"imx6dl-sabresd.dtb"
-#define PHYS_SDRAM_SIZE		(512u * 1024 * 1024)
-#else
-#define CONFIG_DEFAULT_FDT_FILE	"test.dtb"
-#endif
 
 #define CONFIG_CMD_INIT_EEPROM
 
@@ -140,25 +125,48 @@
 #define CONFIG_SYS_TEXT_BASE           0x17800000
 #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
 
+#if defined CONFIG_SYS_BOOT_SPINOR
+#define CONFIG_SYS_USE_SPINOR
+#define CONFIG_ENV_IS_IN_SPI_FLASH
+#define CONFIG_SPL_SPI_SUPPORT
+#define CONFIG_SPL_SPI_FLASH_SUPPORT
+#define CONFIG_SPL_SPI_LOAD
+#define CONFIG_SPL_SPI_BUS		CONFIG_SF_DEFAULT_BUS
+#define CONFIG_SPL_SPI_CS		CONFIG_SF_DEFAULT_CS
+#define CONFIG_SYS_SPI_U_BOOT_OFFS	0x40000
+#define CONFIG_SYS_SPI_SPL_OFFS		0x400
+#else
+#error "Boot possibile solo da NOR Flash SPI"
+#endif
+
 #ifdef CONFIG_SYS_BOOT_NAND
 #define CONFIG_MFG_NAND_PARTITION "mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs) "
 #else
 #define CONFIG_MFG_NAND_PARTITION ""
 #endif
 
+#ifdef CONFIG_WID
 #define CONFIG_MFG_ENV_SETTINGS \
-	"mfgtool_args=setenv bootargs console=" CONFIG_CONSOLE_DEV ",115200 " \
-		"rdinit=/linuxrc " \
 		"g_mass_storage.stall=0 g_mass_storage.removable=1 " \
 		"g_mass_storage.file=/fat g_mass_storage.ro=1 " \
 		"g_mass_storage.idVendor=0x066F g_mass_storage.idProduct=0x37FF "\
-		"g_mass_storage.iSerialNumber=\"\" "\
-		"enable_wait_mode=off "\
-		CONFIG_MFG_NAND_PARTITION \
-		"\0" \
-		"initrd_addr=0x12C00000\0" \
-		"initrd_high=0xffffffff\0" \
-		"bootcmd_mfg=run mfgtool_args;bootz ${loadaddr} ${initrd_addr} ${fdt_addr};\0" \
+		"g_mass_storage.iSerialNumber=\"\" \0" \
+		"spl_copy_addr=0x12000000\0" \
+		"panel=13-080GILB5GA0\0" \
+		"uboot_img_copy_addr=0x12500000\0" \
+		"bootcmd_mfg=sf probe;" \
+		"gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+		"sf unlock;" \
+		"sf erase 0x0 0x400000;" \
+		"sf write ${spl_copy_addr} " __stringify(CONFIG_SYS_SPI_SPL_OFFS) " 0x20000;" \
+		"init_eeprom " CONFIG_WID ";" \
+		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+		"sf write ${uboot_img_copy_addr} " __stringify(CONFIG_SYS_SPI_U_BOOT_OFFS) " 0x100000;" \
+		"sf lock;" \
+		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";\0 "
+#else
+#define CONFIG_MFG_ENV_SETTINGS ""
+#endif
 
 #ifdef CONFIG_SUPPORT_EMMC_BOOT
 #define EMMC_ENV \
@@ -218,95 +226,87 @@
 #else
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS \
-	"epdc_waveform=epdc_splash.bin\0" \
+	"locknor=sf probe;gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";sf lock;gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";\0" \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
-	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
 	"fdt_addr=0x18000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
+	"g_ether_args=g_cdc.dev_addr=58:05:56:00:04:5e g_cdc.host_addr=58:05:56:00:04:5d\0"\
 	"console=" CONFIG_CONSOLE_DEV "\0" \
 	"fdt_high=0xffffffff\0"	  \
+	"bootargs=console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
 	"initrd_high=0xffffffff\0" \
-	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
-	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
-	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
-	"update_sd_firmware=" \
-		"if test ${ip_dyn} = yes; then " \
-			"setenv get_cmd dhcp; " \
-		"else " \
-			"setenv get_cmd tftp; " \
-		"fi; " \
-		"if mmc dev ${mmcdev}; then "	\
-			"if ${get_cmd} ${update_sd_firmware_filename}; then " \
-				"setexpr fw_sz ${filesize} / 0x200; " \
-				"setexpr fw_sz ${fw_sz} + 1; "	\
-				"mmc write ${loadaddr} 0x2 ${fw_sz}; " \
-			"fi; "	\
-		"fi\0" \
-	EMMC_ENV	  \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
-	"mmcargs=setenv bootargs console=${console},${baudrate} ${smp} " \
-		"root=${mmcroot}\0" \
-	"loadbootscript=" \
-		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
-	"bootscript=echo Running bootscript from mmc ...; " \
-		"source\0" \
-	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
-	"mmcboot=echo Booting from mmc ...; " \
-		"run mmcargs; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if run loadfdt; then " \
-				"bootz ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"if test ${boot_fdt} = try; then " \
-					"bootz; " \
+	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
+	"loadimage_sd=fatload mmc 0:1 ${loadaddr} ${image}\0" \
+	"loadfdt_sd=fatload mmc 0:1 ${fdt_addr} ${fdt_file}\0" \
+	"loadsplash_sd=fatload mmc 0:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
+	"sdboot=echo Try Booting from SD...; " \
+		"mmc rescan; " \
+		"if run loadfdt_sd; then " \
+			"if run loadimage_sd; then " \
+				"if test -e mmc 0:1 update.bin; then " \
+					"echo Loading update from SDCard; " \
 				"else " \
-					"echo WARN: Cannot load the DT; " \
-				"fi; " \
-			"fi; " \
-		"else " \
-			"bootz; " \
-		"fi;\0" \
-	"netargs=setenv bootargs console=${console},${baudrate} ${smp} " \
-		"root=/dev/nfs " \
-		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
-	"netboot=echo Booting from net ...; " \
-		"run netargs; " \
-		"if test ${ip_dyn} = yes; then " \
-			"setenv get_cmd dhcp; " \
-		"else " \
-			"setenv get_cmd tftp; " \
-		"fi; " \
-		"${get_cmd} ${image}; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
+					"echo Booting from SD Card; " \
+					"setenv sdargs ${sdargs} root=/dev/mmcblk0p2 rootwait rw; " \
+				"fi;" \
+				"run sdargs; " \
+				"run loadsplash_sd;" \
+				"echo ${bootargs}; " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"if test ${boot_fdt} = try; then " \
-					"bootz; " \
+			"fi; " \
+		"fi;\0 " \
+	"emmcargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} root=/dev/mmcblk2p2 rootwait rw \0" \
+	"loadimage_emmc=fatload mmc 1:1 ${loadaddr} ${image}\0" \
+	"loadfdt_emmc=fatload mmc 1:1 ${fdt_addr} ${fdt_file}\0" \
+	"loadsplash_emmc=fatload mmc 1:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
+	"emmcboot=echo Try Booting from eMMC...; " \
+		"mmc rescan; " \
+		"if run loadfdt_emmc; then " \
+			"if run loadimage_emmc; then " \
+				"echo Booting from eMMC Card; " \
+				"run emmcargs; " \
+				"run loadsplash_emmc;" \
+				"echo ${bootargs}; " \
+				"bootz ${loadaddr} - ${fdt_addr}; " \
+			"fi; " \
+		"fi;\0 " \
+	"loadfdt_usb=fatload usb 0 ${fdt_addr} ${fdt_file}\0" \
+	"loadimage_usb=fatload usb 0 ${loadaddr} ${image}\0" \
+	"usbargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
+	"usbboot=echo Try Booting from USB...;" \
+		"usb start;" \
+		"if run loadfdt_usb; then " \
+			"if run loadimage_usb; then " \
+				"if test -e usb 0 update.bin; then " \
+					"echo Loading update from USB key; " \
 				"else " \
-					"echo WARN: Cannot load the DT; " \
-				"fi; " \
+					"echo Booting from USB key; " \
+					"setenv usbargs ${usbargs} root=/dev/sda2 rootwait rw; " \
+				"fi;" \
+				"fatload usb 0 0x10000000 /logo.bmp;bmp d 0x10000000;" \
+				"run usbargs; " \
+				"bootz ${loadaddr} - ${fdt_addr};" \
 			"fi; " \
-		"else " \
-			"bootz; " \
-		"fi;\0"
-
-#define CONFIG_BOOTCOMMAND \
-	"mmc dev ${mmcdev};" \
-	"if mmc rescan; then " \
-		"if run loadbootscript; then " \
-		"run bootscript; " \
-		"else " \
-			"if run loadimage; then " \
-				"run mmcboot; " \
-			"else run netboot; " \
-			"fi; " \
-		"fi; " \
-	"else run netboot; fi"
+		"fi;\0 " \
+	"bootargs_sata=setenv bootargs console=${console},${baudrate} ${smp} " \
+			"root=/dev/sda1 rootwait rw \0" \
+	"bootcmd_sata=echo Booting from sata ...; " \
+			"run bootargs_sata; sata init; " \
+			"sata read ${loadaddr} 0x800  0x4000; " \
+			"sata read ${fdt_addr} 0x8000 0x800; " \
+			"bootz ${loadaddr} - ${fdt_addr} \0" \
+	"bootcmd=echo Booting...; " \
+	"run locknor;" \
+	/* Try sdcard update */ \
+	"run sdboot;" \
+	/* Try usb update key */ \
+	"run usbboot;" \
+	/* Boot from eMMC */ \
+	"run emmcboot;\0"
 #endif
 
 #define CONFIG_ARP_TIMEOUT     200UL
@@ -355,22 +355,6 @@
 #define CONFIG_SYS_NOSMP
 #endif
 
-#if defined CONFIG_SYS_BOOT_SPINOR
-#define CONFIG_SYS_USE_SPINOR
-#define CONFIG_ENV_IS_IN_SPI_FLASH
-#elif defined CONFIG_SYS_BOOT_EIMNOR
-#define CONFIG_SYS_USE_EIMNOR
-#define CONFIG_ENV_IS_IN_FLASH
-#elif defined CONFIG_SYS_BOOT_NAND
-#define CONFIG_SYS_USE_NAND
-#define CONFIG_ENV_IS_IN_NAND
-#elif defined CONFIG_SYS_BOOT_SATA
-#define CONFIG_ENV_IS_IN_SATA
-#define CONFIG_CMD_SATA
-#else
-#define CONFIG_ENV_IS_IN_MMC
-#endif
-
 #ifdef CONFIG_CMD_SATA
 #define CONFIG_DWC_AHSATA
 #define CONFIG_SYS_SATA_MAX_DEVICE	1
@@ -392,7 +376,7 @@
 #define CONFIG_SF_DEFAULT_MODE (SPI_MODE_0)
 #define CONFIG_SF_CS_GPIO			IMX_GPIO_NR(5, 2)
 #define CONFIG_SF_DEFAULT_CS		1
-#define CONFIG_SF_WPn_GPIO			IMX_GPIO_NR(3, 26)  /* GPIO3_IO26 */
+#define CONFIG_SF_WPn_GPIO			90  /* GPIO3_IO26 */
 #endif
 
 #ifdef CONFIG_SYS_USE_EIMNOR
@@ -547,6 +531,8 @@
 /*#define CONFIG_SPLASH_SCREEN*/
 /*#define CONFIG_MXC_EPDC*/
 
+#define CONFIG_CMD_BMP
+#define CONFIG_CONSOLE_EXTRA_INFO
 /*
  * SPLASH SCREEN Configs
  */
