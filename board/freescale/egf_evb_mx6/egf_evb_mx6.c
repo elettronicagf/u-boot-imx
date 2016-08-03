@@ -670,12 +670,11 @@ void ldo_mode_set(int ldo_bypass)
 			/* decrease VDDARM for 400Mhz DQ:1.1V, DL:1.275V */
 			pmic_reg_read(p, PFUZE100_SW1ABVOL, &value);
 			value &= ~0x3f;
-#if defined(CONFIG_MX6DL)
-			value |= 0x27;
-#else
-			value |= 0x20;
-#endif
-
+			if(is_cpu_type(MXC_CPU_MX6DL) || is_cpu_type(MXC_CPU_MX6SOLO)) {
+				value |= 0x27;
+			} else {
+				value |= 0x20;
+			}
 			pmic_reg_write(p, PFUZE100_SW1ABVOL, value);
 		}
 		/* increase VDDSOC to 1.3V */
@@ -703,18 +702,17 @@ void ldo_mode_set(int ldo_bypass)
 			pmic_reg_write(p, PFUZE100_SW2VOL, value);
 		}
 
-		if (is_400M)
-#if defined(CONFIG_MX6DL)
-			vddarm = 0x1f;
-#else
-			vddarm = 0x1b;
-#endif
-		else
-#if defined(CONFIG_MX6DL)
-			vddarm = 0x23;
-#else
-			vddarm = 0x22;
-#endif
+		if (is_400M) {
+			if(is_cpu_type(MXC_CPU_MX6DL) || is_cpu_type(MXC_CPU_MX6SOLO))
+				vddarm = 0x22;
+			else
+				vddarm = 0x1b;
+		} else {
+			if(is_cpu_type(MXC_CPU_MX6DL) || is_cpu_type(MXC_CPU_MX6SOLO))
+				vddarm = 0x23;
+			else
+				vddarm = 0x22;
+		}
 		pmic_reg_read(p, PFUZE100_SW1ABVOL, &value);
 		value &= ~0x3f;
 		value |= vddarm;

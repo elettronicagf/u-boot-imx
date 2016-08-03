@@ -892,11 +892,11 @@ void prep_anatop_bypass(void)
 	 */
 	if (!arm_orig_podf)
 		set_arm_freq_400M(true);
-#if !defined(CONFIG_MX6DL) && !defined(CONFIG_MX6SX)
-	set_ldo_voltage(LDO_ARM, 975);
-#else
-	set_ldo_voltage(LDO_ARM, 1150);
-#endif
+	if(!is_cpu_type(MXC_CPU_MX6DL) && !is_cpu_type(MXC_CPU_MX6SX) && !is_cpu_type(MXC_CPU_MX6SOLO)) {
+		set_ldo_voltage(LDO_ARM, 975);
+	} else {
+		set_ldo_voltage(LDO_ARM, 1150);
+	}
 }
 
 int set_anatop_bypass(int wdog_reset_pin)
