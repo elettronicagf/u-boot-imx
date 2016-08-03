@@ -408,64 +408,6 @@ static void my_usb_init_mux(void)
 	SETUP_IOMUX_PADS(usbh1_pads);
 }
 
-static iomux_v3_cfg_t const nand_pads[] = {
-	IOMUX_PADS(PAD_NANDF_CLE__NAND_CLE		| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_NANDF_ALE__NAND_ALE		| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_NANDF_WP_B__NAND_WP_B	| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_NANDF_RB0__NAND_READY_B	| MUX_PAD_CTRL(GPMI_PAD_CTRL0)),
-	IOMUX_PADS(PAD_NANDF_CS0__NAND_CE0_B	| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_SD4_CMD__NAND_RE_B		| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_SD4_CLK__NAND_WE_B		| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_NANDF_D0__NAND_DATA00	| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_NANDF_D1__NAND_DATA01	| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_NANDF_D2__NAND_DATA02	| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_NANDF_D3__NAND_DATA03	| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_NANDF_D4__NAND_DATA04	| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_NANDF_D5__NAND_DATA05	| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_NANDF_D6__NAND_DATA06	| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_NANDF_D7__NAND_DATA07	| MUX_PAD_CTRL(GPMI_PAD_CTRL2)),
-	IOMUX_PADS(PAD_SD4_DAT0__NAND_DQS		| MUX_PAD_CTRL(GPMI_PAD_CTRL1)),
-};
-
-static void setup_gpmi_nand(void)
-{
-	struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
-
-	/* config gpmi nand iomux */
-	imx_iomux_v3_setup_multiple_pads(nand_pads, ARRAY_SIZE(nand_pads));
-
-	/* gate ENFC_CLK_ROOT clock first,before clk source switch */
-	clrbits_le32(&mxc_ccm->CCGR2, MXC_CCM_CCGR2_IOMUX_IPT_CLK_IO_MASK);
-
-	/* config gpmi and bch clock to 100 MHz */
-	clrsetbits_le32(&mxc_ccm->cs2cdr,
-			MXC_CCM_CS2CDR_ENFC_CLK_PODF_MASK |
-			MXC_CCM_CS2CDR_ENFC_CLK_PRED_MASK |
-			MXC_CCM_CS2CDR_ENFC_CLK_SEL_MASK,
-			MXC_CCM_CS2CDR_ENFC_CLK_PODF(0) |
-			MXC_CCM_CS2CDR_ENFC_CLK_PRED(3) |
-			MXC_CCM_CS2CDR_ENFC_CLK_SEL(3));
-
-	/* enable ENFC_CLK_ROOT clock */
-	setbits_le32(&mxc_ccm->CCGR2, MXC_CCM_CCGR2_IOMUX_IPT_CLK_IO_MASK);
-
-	/* enable gpmi and bch clock gating */
-	setbits_le32(&mxc_ccm->CCGR4,
-		     MXC_CCM_CCGR4_RAWNAND_U_BCH_INPUT_APB_MASK |
-		     MXC_CCM_CCGR4_RAWNAND_U_GPMI_BCH_INPUT_BCH_MASK |
-		     MXC_CCM_CCGR4_RAWNAND_U_GPMI_BCH_INPUT_GPMI_IO_MASK |
-		     MXC_CCM_CCGR4_RAWNAND_U_GPMI_INPUT_APB_MASK |
-		     MXC_CCM_CCGR4_PL301_MX6QPER1_BCH_OFFSET);
-
-	/* enable apbh clock gating */
-	setbits_le32(&mxc_ccm->CCGR0, MXC_CCM_CCGR0_APBHDMA_MASK);
-}
-
-static void my_nand_init_mux(void)
-{
-	setup_gpmi_nand();
-}
-
 /**
  * eeprom modulo e carrier
  */
@@ -615,12 +557,6 @@ static iomux_v3_cfg_t const hdmi_pads[] = {
 	IOMUX_PADS(PAD_KEY_ROW2__HDMI_TX_CEC_LINE	| HDMI_CEC_PAD_CTRL), // HDMI_CEC
 };
 
-static void my_hdmi_init_mux(void)
-{
-	SETUP_IOMUX_PADS(hdmi_pads);
-}
-
-
 void egf_board_mux_init(int mode)
 {
 	switch(mode){
@@ -628,7 +564,6 @@ void egf_board_mux_init(int mode)
 		my_power_management_init_mux();
 		my_uart_init_mux();
 		my_gpio_init_mux();
-		//my_nand_init_mux();
 		my_i2c_init_mux();
 		my_enet_init_mux();
 		my_spi4_init_mux();
@@ -638,7 +573,6 @@ void egf_board_mux_init(int mode)
 		my_display0_init_mux();
 		my_display1_init_mux();
 		my_usb_init_mux();
-		//my_hdmi_init_mux();
 		break;
 	case APPLICATION_MUX_MODE:
 		my_power_management_init_mux();
@@ -653,7 +587,6 @@ void egf_board_mux_init(int mode)
 		my_sd_init_mux();
 		my_sdio_wifi_init_mux();
 		my_usb_init_mux();
-		//my_nand_init_mux();
 		my_eeprom_init_mux();
 		my_cam_init_mux();
 		my_audio_init_mux();
@@ -661,7 +594,6 @@ void egf_board_mux_init(int mode)
 		my_spi2_init_mux();
 		my_display0_init_mux();
 		my_display1_init_mux();
-		my_hdmi_init_mux();
 		break;
 	default:
 		printf("MUX MODE NOT DEFINED!!!!!!!!!!!!\n");
