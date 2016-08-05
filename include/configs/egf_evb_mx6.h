@@ -151,13 +151,15 @@
 		"g_mass_storage.file=/fat g_mass_storage.ro=1 " \
 		"g_mass_storage.idVendor=0x066F g_mass_storage.idProduct=0x37FF "\
 		"g_mass_storage.iSerialNumber=\"\" \0" \
+		"destroyenv=sf probe; gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+				"sf unlock; sf erase 0x3F0000 0x10000;sf lock;" \
+				"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) "\0" \
 		"spl_copy_addr=0x12000000\0" \
-		"panel=13-080GILB5GA0\0" \
 		"uboot_img_copy_addr=0x12500000\0" \
 		"bootcmd_mfg=sf probe;" \
 		"gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 		"sf unlock;" \
-		"sf erase 0x0 0x400000;" \
+		"sf erase 0x0 0x3F0000;" \
 		"sf write ${spl_copy_addr} " __stringify(CONFIG_SYS_SPI_SPL_OFFS) " 0x20000;" \
 		"init_eeprom " CONFIG_WID ";" \
 		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
@@ -239,6 +241,9 @@
 	"bootargs=console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
 	"initrd_high=0xffffffff\0" \
 	"mmcautodetect=yes\0" \
+	"destroyenv=sf probe; gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+			"sf unlock; sf erase 0x3F0000 0x10000;sf lock;" \
+			"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) "\0" \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
 	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
 	"loadimage_sd=fatload mmc 0:1 ${loadaddr} ${image}\0" \
@@ -412,7 +417,7 @@
 #if defined(CONFIG_ENV_IS_IN_MMC)
 #define CONFIG_ENV_OFFSET		(8 * 64 * 1024)
 #elif defined(CONFIG_ENV_IS_IN_SPI_FLASH)
-#define CONFIG_ENV_OFFSET              (768 * 1024)
+#define CONFIG_ENV_OFFSET              (1008 * 4 * 1024)
 #define CONFIG_ENV_SECT_SIZE           (64 * 1024)
 #define CONFIG_ENV_SPI_BUS             CONFIG_SF_DEFAULT_BUS
 #define CONFIG_ENV_SPI_CS              CONFIG_SF_DEFAULT_CS
