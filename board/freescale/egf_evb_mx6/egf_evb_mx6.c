@@ -66,7 +66,15 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define I2C_PMIC	1
 
-#define DISP0_PWR_EN	IMX_GPIO_NR(1, 21)
+#define DISP0_EN				IMX_GPIO_NR(6, 16)
+#define DISP0_BKL_PWM_GPIO		IMX_GPIO_NR(2, 10)
+#define DISP0_BKL_PWR_EN_GPIO	IMX_GPIO_NR(3, 8)
+#define DISP1_EN				IMX_GPIO_NR(2, 27)
+#define DISP1_BKL_PWM_GPIO		IMX_GPIO_NR(1, 9)
+#define DISP1_BKL_PWR_EN_GPIO	IMX_GPIO_NR(3, 14)
+#define DISP1_LVDS_GPIO			IMX_GPIO_NR(5, 18)
+
+#define PICOS2KHZ(a) (1000000000UL/(a))
 
 int dram_init(void)
 {
@@ -97,10 +105,6 @@ void prepare_boot_env(void)
 	}
 }
 
-static void enable_rgb(struct display_info_t const *dev)
-{
-	gpio_direction_output(DISP0_PWR_EN, 1);
-}
 
 #ifdef CONFIG_FSL_ESDHC
 struct fsl_esdhc_cfg usdhc_cfg[2] = {
@@ -275,8 +279,7 @@ static void enable_lvds(struct display_info_t const *dev)
 	struct iomuxc *iomux = (struct iomuxc *)
 				IOMUXC_BASE_ADDR;
 	u32 reg = readl(&iomux->gpr[2]);
-	reg |= IOMUXC_GPR2_DATA_WIDTH_CH0_18BIT |
-	       IOMUXC_GPR2_DATA_WIDTH_CH1_18BIT;
+	reg |= IOMUXC_GPR2_DATA_WIDTH_CH1_24BIT;
 	writel(reg, &iomux->gpr[2]);
 }
 
@@ -335,47 +338,167 @@ static void vpll_change_frequency(unsigned int pixclock){
 
 }
 
-struct display_info_t const displays[] = {{
-	.bus	= -1,
-	.addr	= 0,
-	.pixfmt	= IPU_PIX_FMT_RGB666,
-	.detect	= NULL,
-	.enable	= enable_lvds,
-	.mode	= {
-		.name           = "Hannstar-XGA",
-		.refresh        = 60,
-		.xres           = 1024,
-		.yres           = 768,
-		.pixclock       = 15385,
-		.left_margin    = 220,
-		.right_margin   = 40,
-		.upper_margin   = 21,
-		.lower_margin   = 7,
-		.hsync_len      = 60,
-		.vsync_len      = 10,
-		.sync           = FB_SYNC_EXT,
-		.vmode          = FB_VMODE_NONINTERLACED
-} }, {
-	.bus	= 0,
-	.addr	= 0,
-	.pixfmt	= IPU_PIX_FMT_RGB24,
-	.detect	= NULL,
-	.enable	= enable_rgb,
-	.mode	= {
-		.name           = "SEIKO-WVGA",
-		.refresh        = 60,
-		.xres           = 800,
-		.yres           = 480,
-		.pixclock       = 29850,
-		.left_margin    = 89,
-		.right_margin   = 164,
-		.upper_margin   = 23,
-		.lower_margin   = 10,
-		.hsync_len      = 10,
-		.vsync_len      = 10,
-		.sync           = 0,
-		.vmode          = FB_VMODE_NONINTERLACED
-} } };
+static unsigned int get_disp_pix_clock(struct display_info_t const *dev) {
+	return PICOS2KHZ(dev->mode.pixclock) * 1000;
+}
+
+static void blc1134_enable(struct display_info_t const *dev)
+{
+	vpll_change_frequency(get_disp_pix_clock(dev));
+	enable_lvds(dev);
+	gpio_direction_output(DISP1_EN, 1);
+	gpio_direction_output(DISP1_BKL_PWM_GPIO, 1);
+	gpio_direction_output(DISP1_BKL_PWR_EN_GPIO, 1);
+}
+
+static void blc1133_enable(struct display_info_t const *dev)
+{
+	vpll_change_frequency(get_disp_pix_clock(dev));
+	enable_lvds(dev);
+	gpio_direction_output(DISP1_BKL_PWM_GPIO, 1);
+	gpio_direction_output(DISP1_BKL_PWR_EN_GPIO, 1);
+	gpio_direction_output(DISP0_BKL_PWM_GPIO, 1);
+	gpio_direction_output(DISP0_BKL_PWR_EN_GPIO, 1);
+}
+
+static void blc1136_enable(struct display_info_t const *dev)
+{
+	vpll_change_frequency(get_disp_pix_clock(dev));
+	enable_lvds(dev);
+	gpio_direction_output(DISP1_LVDS_GPIO, 1);
+	gpio_direction_output(DISP1_EN, 1);
+	gpio_direction_output(DISP1_BKL_PWM_GPIO, 1);
+	gpio_direction_output(DISP1_BKL_PWR_EN_GPIO, 1);
+
+}
+
+static void blc1093_enable(struct display_info_t const *dev)
+{
+	gpio_direction_output(DISP0_EN, 1);
+	gpio_direction_output(DISP0_BKL_PWM_GPIO, 1);
+	gpio_direction_output(DISP0_BKL_PWR_EN_GPIO, 1);
+}
+
+
+static void blc1102_enable(struct display_info_t const *dev)
+{
+	gpio_direction_output(DISP0_EN, 1);
+	gpio_direction_output(DISP0_BKL_PWM_GPIO, 1);
+	gpio_direction_output(DISP0_BKL_PWR_EN_GPIO, 1);
+}
+
+struct display_info_t const displays[] = {
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= blc1136_enable,
+		.mode	= {
+			.name           = "EGF_BLC1136", /* G104S1-L01 Innolux 10.4" */
+			.refresh        = 60,
+			.xres           = 800,
+			.yres           = 600,
+			.pixclock       = 25000,
+			.left_margin    = 128,
+			.right_margin   = 128,
+			.upper_margin   = 14,
+			.lower_margin   = 14,
+			.hsync_len      = 60,
+			.vsync_len      = 1,
+			.sync           = FB_SYNC_EXT,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= blc1134_enable,
+		.mode	= {
+			.name           = "EGF_BLC1134", /* G121I1-L01 Innolux 12.1" */
+			.refresh        = 60,
+			.xres           = 1280,
+			.yres           = 800,
+			.pixclock       = 14084,
+			.left_margin    = 80,
+			.right_margin   = 80,
+			.upper_margin   = 12,
+			.lower_margin   = 11,
+			.hsync_len      = 60,
+			.vsync_len      = 10,
+			.sync           = FB_SYNC_EXT,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= blc1133_enable,
+		.mode	= {
+			.name           = "EGF_BLC1133", /* DLC1010AZG-T-6 DLC 10.1" */
+			.refresh        = 60,
+			.xres           = 1024,
+			.yres           = 600,
+			.pixclock       = 19531,
+			.left_margin    = 160,
+			.right_margin   = 160,
+			.upper_margin   = 23,
+			.lower_margin   = 12,
+			.hsync_len      = 60,
+			.vsync_len      = 10,
+			.sync           = FB_SYNC_EXT,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= blc1093_enable,
+		.mode	= {
+			.name           = "EGF_BLC1093", /*  KWH070KQ13-F02 Formike 7.0" */
+			.refresh        = 60,
+			.xres           = 800,
+			.yres           = 480,
+			.pixclock       = 25000,
+			.left_margin    = 45,
+			.right_margin   = 210,
+			.upper_margin   = 22,
+			.lower_margin   = 132,
+			.hsync_len      = 1,
+			.vsync_len      = 1,
+			.sync           = 0,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= blc1102_enable,
+		.mode	= {
+			.name           = "EGF_BLC1102", /*  UMSH-8394MD-5T URT 5.7" */
+			.refresh        = 60,
+			.xres           = 640,
+			.yres           = 480,
+			.pixclock       = 39700,
+			.left_margin    = 80,
+			.right_margin   = 80,
+			.upper_margin   = 25,
+			.lower_margin   = 20,
+			.hsync_len      = 30,
+			.vsync_len      = 3,
+			.sync           = 0,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	}
+};
 size_t display_count = ARRAY_SIZE(displays);
 
 static void enable_vpll(void)
