@@ -153,7 +153,8 @@
 		"g_mass_storage.iSerialNumber=\"\" \0" \
 		"destroyenv=sf probe; gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 				"sf unlock; sf erase 0x3F0000 0x10000;sf lock;" \
-				"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) "\0" \
+				"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+				"env default -f -a;\0" \
 		"spl_copy_addr=0x12000000\0" \
 		"uboot_img_copy_addr=0x12500000\0" \
 		"bootcmd_mfg=sf probe;" \
