@@ -244,7 +244,40 @@
 	"mmcautodetect=yes\0" \
 	"destroyenv=sf probe; gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 			"sf unlock; sf erase 0x3F0000 0x10000;sf lock;" \
-			"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) "\0" \
+			"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+			"env default -f -a;\0" \
+	"fix_dt=fdt addr ${fdt_addr}; " \
+			"if test \"${panel}\" = \"EGF_BLC1136\"; then " \
+				"fdt rm EGF_BLC1134; " \
+				"fdt rm EGF_BLC1133; " \
+			"elif test \"${panel}\" = \"EGF_BLC1134\"; then " \
+				"fdt rm EGF_BLC1136; " \
+				"fdt rm EGF_BLC1133; " \
+			"elif test \"${panel}\" = \"EGF_BLC1133\"; then " \
+				"fdt rm EGF_BLC1134; " \
+				"fdt rm EGF_BLC1136; " \
+			"elif test \"${panel}\" = \"EGF_BLC1093\"; then " \
+				"fdt rm EGF_BLC1134; " \
+				"fdt rm EGF_BLC1136; " \
+				"fdt rm EGF_BLC1133; " \
+				"fdt set mxcfb0 disp_dev \"lcd\"; " \
+				"fdt set mxcfb0 mode_str \"EGF_BLC1093\"; " \
+			"elif test \"${panel}\" = \"EGF_BLC1102\"; then " \
+				"fdt rm EGF_BLC1134; " \
+				"fdt rm EGF_BLC1136; " \
+				"fdt rm EGF_BLC1133; " \
+				"fdt set mxcfb0 disp_dev \"lcd\"; " \
+				"fdt set mxcfb0 mode_str \"EGF_BLC1102\"; " \
+			"else " \
+				"echo invalid display selection ${panel}; " \
+			"fi;" \
+			"i2c dev 2; " \
+			"if i2c probe 0x50 ; then " \
+				"echo \"------ have HDMI monitor\";" \
+			"else " \
+				"echo \"------ No HDMI monitor\";" \
+				"fdt rm mxcfb1; " \
+			"fi;\0" \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
 	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
 	"loadimage_sd=fatload mmc 0:1 ${loadaddr} ${image}\0" \
@@ -257,12 +290,13 @@
 				"if test -e mmc 0:1 update.bin; then " \
 					"echo Loading update from SDCard; " \
 				"else " \
-					"echo Booting from SD Card; " \
+					"echo Booting from SD Card;" \
 					"setenv sdargs ${sdargs} root=/dev/mmcblk0p2 rootwait rw; " \
-				"fi;" \
+				"fi; " \
 				"run sdargs; " \
-				"run loadsplash_sd;" \
+				"run loadsplash_sd; " \
 				"echo ${bootargs}; " \
+				"run fix_dt; " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"fi; " \
 		"fi;\0 " \
@@ -278,6 +312,7 @@
 				"run emmcargs; " \
 				"run loadsplash_emmc;" \
 				"echo ${bootargs}; " \
+				"run fix_dt; " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"fi; " \
 		"fi;\0 " \
@@ -296,6 +331,7 @@
 				"fi;" \
 				"fatload usb 0 0x10000000 /logo.bmp;bmp d 0x10000000;" \
 				"run usbargs; " \
+				"run fix_dt; " \
 				"bootz ${loadaddr} - ${fdt_addr};" \
 			"fi; " \
 		"fi;\0 " \
