@@ -280,6 +280,61 @@ static void enable_lvds(struct display_info_t const *dev)
 	writel(reg, &iomux->gpr[2]);
 }
 
+
+static void vpll_change_frequency(unsigned int pixclock){
+	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
+	unsigned int timeout = 100000;
+	unsigned int target_multiplier;
+	unsigned int div_select;
+	unsigned int num, denom;
+	if(pixclock > 92500000){
+		printf("Display Frequency not supported!\n");
+		return;
+	}
+	/* Bypass PLL5 */
+	setbits_le32(&ccm->analog_pll_video, BM_ANADIG_PLL_VIDEO_BYPASS);
+	/* Power Down PLL5 */
+	setbits_le32(&ccm->analog_pll_video, BM_ANADIG_PLL_VIDEO_POWERDOWN);
+
+	// Set PLL5 POST_DIV_SELECT to 1 (divide by 2) and PLL5 POST_DIV_SELECT to 37
+	// PLL Freq = Fref * (DIV_SELECT + NUM / DENOM) = 24M * (37 + 11/12) = 910
+	// PLL5 post div select = 910 / 2 = 455 MHz
+	// 455 MHz / 7 = 65 MHz (pixel clock)
+
+	printf("Changing frequency to %d\n", pixclock);
+	target_multiplier = (pixclock * 7 * 2) / 24;
+	printf("Target multiplier %d\n", (int)target_multiplier);
+	div_select = target_multiplier / 1000000;
+	printf("Div_select is %d\n", div_select);
+	num = target_multiplier - (div_select * 1000000);
+	printf("num %d\n", num);
+	denom = 1000000;
+	printf("Denom is %d\n", denom);
+
+	clrsetbits_le32(&ccm->analog_pll_video,
+			BM_ANADIG_PLL_VIDEO_DIV_SELECT |
+			(0x3 << 19),
+			BF_ANADIG_PLL_VIDEO_DIV_SELECT(div_select) |
+			(0x1 << 19));
+
+	writel(BF_ANADIG_PLL_VIDEO_NUM_A(num), &ccm->analog_pll_video_num);
+	writel(BF_ANADIG_PLL_VIDEO_DENOM_B(denom), &ccm->analog_pll_video_denom);
+
+	clrbits_le32(&ccm->analog_pll_video, BM_ANADIG_PLL_VIDEO_POWERDOWN);
+
+	while (timeout--)
+		if (readl(&ccm->analog_pll_video) & BM_ANADIG_PLL_VIDEO_LOCK)
+			break;
+	if (timeout < 0)
+		printf("Warning: video pll lock timeout!\n");
+
+	/* Exit bypass Mode */
+	clrsetbits_le32(&ccm->analog_pll_video,
+			BM_ANADIG_PLL_VIDEO_BYPASS,
+			BM_ANADIG_PLL_VIDEO_ENABLE);
+
+}
+
 struct display_info_t const displays[] = {{
 	.bus	= -1,
 	.addr	= 0,
@@ -323,6 +378,149 @@ struct display_info_t const displays[] = {{
 } } };
 size_t display_count = ARRAY_SIZE(displays);
 
+static void enable_vpll(void)
+{
+	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
+	int timeout = 100000;
+
+	setbits_le32(&ccm->analog_pll_video, BM_ANADIG_PLL_VIDEO_POWERDOWN);
+
+	// Set PLL5 POST_DIV_SELECT to 1 (divide by 2) and PLL5 POST_DIV_SELECT to 37
+	// PLL Freq = Fref * (DIV_SELECT + NUM / DENOM) = 24M * (37 + 11/12) = 910
+	// PLL5 post div select = 910 / 2 = 455 MHz
+	// 455 MHz / 7 = 65 MHz (pixel clock)
+	clrsetbits_le32(&ccm->analog_pll_video,
+			BM_ANADIG_PLL_VIDEO_DIV_SELECT |
+			(0x3 << 19),
+			BF_ANADIG_PLL_VIDEO_DIV_SELECT(37) |
+			(0x1 << 19));
+
+	writel(BF_ANADIG_PLL_VIDEO_NUM_A(11), &ccm->analog_pll_video_num);
+	writel(BF_ANADIG_PLL_VIDEO_DENOM_B(12), &ccm->analog_pll_video_denom);
+
+	clrbits_le32(&ccm->analog_pll_video, BM_ANADIG_PLL_VIDEO_POWERDOWN);
+
+	while (timeout--)
+		if (readl(&ccm->analog_pll_video) & BM_ANADIG_PLL_VIDEO_LOCK)
+			break;
+	if (timeout < 0)
+		printf("Warning: video pll lock timeout!\n");
+
+	clrsetbits_le32(&ccm->analog_pll_video,
+			BM_ANADIG_PLL_VIDEO_BYPASS,
+			BM_ANADIG_PLL_VIDEO_ENABLE);
+}
+
+void select_ldb_di_clock_source_pll5(void)
+{
+	struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
+	int reg;
+
+	/*
+	 * Need to follow a strict procedure when changing the LDB
+	 * clock, else we can introduce a glitch. Things to keep in
+	 * mind:
+	 * 1. The current and new parent clocks must be disabled.
+	 * 2. The default clock for ldb_dio_clk is mmdc_ch1 which has
+	 * no CG bit.
+	 * 3. In the RTL implementation of the LDB_DI_CLK_SEL mux
+	 * the top four options are in one mux and the PLL3 option along
+	 * with another option is in the second mux. There is third mux
+	 * used to decide between the first and second mux.
+	 * The code below switches the parent to the bottom mux first
+	 * and then manipulates the top mux. This ensures that no glitch
+	 * will enter the divider.
+	 *
+	 * Need to disable MMDC_CH1 clock manually as there is no CG bit
+	 * for this clock. The only way to disable this clock is to move
+	 * it to pll3_sw_clk and then to disable pll3_sw_clk
+	 * Make sure periph2_clk2_sel is set to pll3_sw_clk
+	 */
+
+	/* Disable ldb_di clock parents */
+	/* Disable PLL5 */
+	reg = readl(&mxc_ccm->analog_pll_video);
+	reg &= ~(1 << 13);
+	writel(reg, &mxc_ccm->analog_pll_video);
+
+	/* Set MMDC_CH1 mask bit */
+	reg = readl(&mxc_ccm->ccdr);
+	reg |= MXC_CCM_CCDR_MMDC_CH1_HS_MASK;
+	writel(reg, &mxc_ccm->ccdr);
+
+	/* Set periph2_clk2_sel to be sourced from PLL3_sw_clk */
+	reg = readl(&mxc_ccm->cbcmr);
+	reg &= ~(1<<20);
+	writel(reg, &mxc_ccm->cbcmr);
+
+	/*
+	 * Set the periph2_clk_sel to the top mux so that
+	 * mmdc_ch1 is from pll3_sw_clk.
+	 */
+	reg = readl(&mxc_ccm->cbcdr);
+	reg |= (1<<26);
+	writel(reg, &mxc_ccm->cbcdr);
+
+	/* Wait for the clock switch */
+	while (readl(&mxc_ccm->cdhipr))
+		;
+
+	/* Disable pll3_sw_clk by selecting bypass clock source */
+	reg = readl(&mxc_ccm->ccsr);
+	reg |= MXC_CCM_CCSR_PLL3_SW_CLK_SEL;
+	writel(reg, &mxc_ccm->ccsr);
+
+	/* Set the ldb_di0_clk and ldb_di1_clk to 111b */
+	reg = readl(&mxc_ccm->cs2cdr);
+	reg |= ((7 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET)
+	      | (7 << MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET));
+	writel(reg, &mxc_ccm->cs2cdr);
+
+	/* Set the ldb_di0_clk and ldb_di1_clk to 100b */
+	reg = readl(&mxc_ccm->cs2cdr);
+	reg &= ~(MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK
+	      | MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_MASK);
+	reg |= ((4 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET)
+	      | (4 << MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET));
+	writel(reg, &mxc_ccm->cs2cdr);
+
+	/* Set the ldb_di0_clk and ldb_di1_clk to desired source */
+	reg = readl(&mxc_ccm->cs2cdr);
+	reg &= ~(MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK
+	      | MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_MASK);
+	reg |= ((0 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET)
+	      | (0 << MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET));
+	writel(reg, &mxc_ccm->cs2cdr);
+
+	/* Unbypass pll3_sw_clk */
+	reg = readl(&mxc_ccm->ccsr);
+	reg &= ~MXC_CCM_CCSR_PLL3_SW_CLK_SEL;
+	writel(reg, &mxc_ccm->ccsr);
+
+	/*
+	 * Set the periph2_clk_sel back to the bottom mux so that
+	 * mmdc_ch1 is from its original parent.
+	 */
+	reg = readl(&mxc_ccm->cbcdr);
+	reg &= ~(1<<26);
+	writel(reg, &mxc_ccm->cbcdr);
+
+	/* Wait for the clock switch */
+	while (readl(&mxc_ccm->cdhipr))
+		;
+
+	/* Clear MMDC_CH1 mask bit */
+	reg = readl(&mxc_ccm->ccdr);
+	reg &= ~MXC_CCM_CCDR_MMDC_CH1_HS_MASK;
+	writel(reg, &mxc_ccm->ccdr);
+
+	/* Re-Enable PLL5 */
+	reg = readl(&mxc_ccm->analog_pll_video);
+	reg |= (1 << 13);
+	writel(reg, &mxc_ccm->analog_pll_video);
+}
+
+
 static void setup_display(void)
 {
 	struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
@@ -330,19 +528,21 @@ static void setup_display(void)
 	int reg;
 
 	enable_ipu_clock();
+	enable_vpll();
+	select_ldb_di_clock_source_pll5();
 
 	/* Turn on LDB0, LDB1, IPU,IPU DI0 clocks */
 	reg = readl(&mxc_ccm->CCGR3);
 	reg |=  MXC_CCM_CCGR3_LDB_DI0_MASK | MXC_CCM_CCGR3_LDB_DI1_MASK;
 	writel(reg, &mxc_ccm->CCGR3);
 
-	/* set LDB0, LDB1 clk select to 011/011 */
-	reg = readl(&mxc_ccm->cs2cdr);
-	reg &= ~(MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_MASK
-		 | MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK);
-	reg |= (3 << MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET)
-	      | (3 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET);
-	writel(reg, &mxc_ccm->cs2cdr);
+//	/* set LDB0, LDB1 clk select to 011/011 */
+//	reg = readl(&mxc_ccm->cs2cdr);
+//	reg &= ~(MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_MASK
+//		 | MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK);
+//	reg |= (3 << MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET)
+//	      | (3 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET);
+//	writel(reg, &mxc_ccm->cs2cdr);
 
 	reg = readl(&mxc_ccm->cscmr2);
 	reg |= MXC_CCM_CSCMR2_LDB_DI0_IPU_DIV | MXC_CCM_CSCMR2_LDB_DI1_IPU_DIV;
