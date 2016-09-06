@@ -306,6 +306,7 @@ static void my_spinor_init_mux(void)
 static void my_touch_init_mux(void)
 {
 	SETUP_IOMUX_PADS(touch_pads);
+	gpio_direction_output((IMX_GPIO_NR(6, 31)),1);
 }
 /* eMCC
  *
