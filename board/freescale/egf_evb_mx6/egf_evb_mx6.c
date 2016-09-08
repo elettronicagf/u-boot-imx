@@ -54,7 +54,7 @@
 #include "gf_eeprom.h"
 #include "gf_eeprom_port.h"
 #ifdef CONFIG_SPL_BUILD
-#include "gf_ddr_parameters.h"
+#include "ddr_mx6/WID0500_AA01.01.c"
 #endif
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -1172,9 +1172,7 @@ void board_recovery_setup(void)
 #include <libfdt.h>
 
 /* SW REVISIONS*/
-#define REV_WID0510_AA0101 "WID0510_AA01.01"
-#define REV_WID0510_AB0101 "WID0510_AB01.01"
-#define REV_WID0510_AC0101 "WID0510_AC01.01"
+#define REV_WID0500_AA0101 "WID0500_AA01.01"
 
 #define MT41K128M16JT_125 		1
 #define MT41K256M16HA_125 		2
@@ -1183,41 +1181,13 @@ void board_recovery_setup(void)
 #define DDR_BUS_WIDTH_64BIT		64
 
 struct egf_som {
-	int ram_model;
-	int ram_bus_width;
-	int ram_cs_used;
-	void * iomux_ddr_regs;
-	void * iomux_grp_regs;
-	void * mmdc_calibration;
+	void (*ddr_initialization_script)(void);
 };
 
 static struct egf_som __attribute__((section (".data"))) the_som;
 
-static struct egf_som the_som_WID_0510_AA0101 = {
-		MT41K128M16JT_125,
-		DDR_BUS_WIDTH_32BIT,
-		1,
-		&mx6sdl_ddr_ioregs_standard,
-		&mx6sdl_grp_ioregs_standard,
-		&mx6sdl_128x16_mmdc_calib_default,
-};
-
-static struct egf_som the_som_WID_0510_AB0101 = {
-		MT41K128M16JT_125,
-		DDR_BUS_WIDTH_32BIT,
-		1,
-		&mx6dq_ddr_ioregs_standard,
-		&mx6dq_grp_ioregs_standard,
-		&mx6dq_128x16_mmdc_calib_default,
-};
-
-static struct egf_som the_som_WID_0510_AC0101 = {
-		MT41K128M16JT_125,
-		DDR_BUS_WIDTH_64BIT,
-		1,
-		&mx6sdl_ddr_ioregs_standard,
-		&mx6sdl_grp_ioregs_standard,
-		&mx6sdl_128x16_mmdc_calib_x64,
+static struct egf_som the_som_WID_0500_AA0101 = {
+	WID0500_AA01_01_ddr_setup,
 };
 
 static int gf_strcmp(const char * cs, const char * ct) {
@@ -1243,23 +1213,11 @@ int load_revision(void)
 		while(1);
  	}
 
-	if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AA0101))
+	if(!gf_strcmp(egf_sw_id_code,REV_WID0500_AA0101))
 	{
-		/* SW Revision is WID0510_AA01.01 */
-		printf("GF Software ID Code: WID0510_AA01.01\n");
-		memcpy(&the_som, &the_som_WID_0510_AA0101, sizeof(the_som));
-	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AB0101))
-	{
-		/* SW Revision is WID0510_AB01.01 */
-		printf("GF Software ID Code: WID0510_AB01.01\n");
-		memcpy(&the_som, &the_som_WID_0510_AB0101, sizeof(the_som));
-	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AC0101))
-	{
-		/* SW Revision is WID0510_AC01.01 */
-		printf("GF Software ID Code: WID0510_AC01.01\n");
-		memcpy(&the_som, &the_som_WID_0510_AC0101, sizeof(the_som));
+		/* SW Revision is WID0500_AA01.01 */
+		printf("GF Software ID Code: WID0500_AA01.01\n");
+		memcpy(&the_som, &the_som_WID_0500_AA0101, sizeof(the_som));
 	}
 	else {
 		printf("Unrecognized EGF SW ID Code: %s\n",egf_sw_id_code);
@@ -1299,71 +1257,7 @@ static void gpr_init(void)
  */
 static void spl_dram_init(void)
 {
-	struct mx6_ddr3_cfg *memory_timings = NULL;
-	struct mx6_mmdc_calibration *memory_calib = NULL;
-	struct mx6_ddr_sysinfo sysinfo = {
-		/* width of data bus:0=16,1=32,2=64 */
-		.dsize = the_som.ram_bus_width/32,
-		/* config for full 4GB range so that get_mem_size() works */
-		.cs_density = 32, /* 32Gb per CS */
-		/* single chip select */
-		.ncs = the_som.ram_cs_used,
-		.cs1_mirror = 0,
-		.rtt_wr = 1 /*DDR3_RTT_60_OHM*/,	/* RTT_Wr = RZQ/4 */
-#ifdef RTT_NOM_120OHM
-		.rtt_nom = 2 /*DDR3_RTT_120_OHM*/,	/* RTT_Nom = RZQ/2 */
-#else
-		.rtt_nom = 1 /*DDR3_RTT_60_OHM*/,	/* RTT_Nom = RZQ/4 */
-#endif
-		.walat = 1,	/* Write additional latency */
-		.ralat = 5,	/* Read additional latency */
-		.mif3_mode = 3,	/* Command prediction working mode */
-		.bi_on = 1,	/* Bank interleaving enabled */
-		.sde_to_rst = 0x10,	/* 14 cycles, 200us (JEDEC default) */
-		.rst_to_cke = 0x23,	/* 33 cycles, 500us (JEDEC default) */
-	};
-
-	/*
-	 * MMDC Calibration requires the following data:
-	 *   mx6_mmdc_calibration - board-specific calibration (routing delays)
-	 *      these calibration values depend on board routing, SoC, and DDR
-	 *   mx6_ddr_sysinfo - board-specific memory architecture (width/cs/etc)
-	 *   mx6_ddr_cfg - chip specific timing/layout details
-	 */
-	switch(the_som.ram_model)
-	{
-	case MT41K128M16JT_125:
-		memory_timings = &mt41k128m16jt_125;
-		break;
-	case MT41K256M16HA_125:
-		memory_timings = &mt41k256m16ha_125;
-		break;
-	default:
-		puts("Error: Invalid Memory Configuration\n");
-		hang();
-	}
-
-	memory_calib = the_som.mmdc_calibration;
-
-	if (!memory_timings) {
-		puts("Error: Invalid Memory Configuration\n");
-		hang();
-	}
-	if (!memory_calib) {
-		puts("Error: Invalid Board Calibration Configuration\n");
-		hang();
-	}
-
-	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D))
-	{
-		mx6dq_dram_iocfg(the_som.ram_bus_width, (struct mx6dq_iomux_ddr_regs *)the_som.iomux_ddr_regs,
-					 (struct mx6dq_iomux_grp_regs *)the_som.iomux_grp_regs);
-	} else
-	{
-		mx6sdl_dram_iocfg(the_som.ram_bus_width, (struct mx6sdl_iomux_ddr_regs *)the_som.iomux_ddr_regs,
-					 (struct mx6sdl_iomux_grp_regs *)the_som.iomux_grp_regs);
-	}
-	mx6_dram_cfg(&sysinfo, memory_calib, memory_timings);
+	the_som.ddr_initialization_script();
 }
 
 static void fix_clocks(void)
