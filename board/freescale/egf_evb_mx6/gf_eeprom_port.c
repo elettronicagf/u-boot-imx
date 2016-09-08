@@ -16,8 +16,7 @@ struct wid_translation legacy_wid_translation_table[] = {
 };
 
 struct wid_list_for_eeprom_programming wid_list[] = {
-	{"JSF0466_B01.beta1","WID0466_AC01.01"},
-	{"JSF0466_C01.beta1","WID0466_AC01.01"},
+	{"JSM0500_A01.Beta1","WID0500_AA01.01"},
 };
 
 void *gf_memset(void *s, int c, size_t n)
@@ -182,12 +181,12 @@ void gf_serial_init(void)
 
 void gf_som_eeprom_unlock(void)
 {
-	gpio_set_value(EEPROM_nWP_GPIO, 1);
+	gpio_set_value(EEPROM_nWP_GPIO, 0);
 }
 
 void gf_som_eeprom_lock(void)
 {
-	gpio_set_value(EEPROM_nWP_GPIO, 0);
+	gpio_set_value(EEPROM_nWP_GPIO, 1);
 }
 
 int gf_eeprom_read(u8 address,u16 start_address,u8 * buffer,int len)

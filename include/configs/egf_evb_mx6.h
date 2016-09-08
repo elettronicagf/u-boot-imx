@@ -569,7 +569,7 @@
 #define CONFIG_CMD_USB_MASS_STORAGE
 #endif
 
-#define EEPROM_nWP_GPIO (IMX_GPIO_NR(1, 27))
+#define EEPROM_nWP_GPIO (IMX_GPIO_NR(3, 24))
 
 /*#define CONFIG_SPLASH_SCREEN*/
 /*#define CONFIG_MXC_EPDC*/
