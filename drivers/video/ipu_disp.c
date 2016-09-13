@@ -852,8 +852,8 @@ int32_t ipu_init_sync_panel(int disp, uint32_t pixel_clk,
 
 	debug("panel size = %d x %d\n", width, height);
 
-	if ((v_sync_width == 0) || (h_sync_width == 0))
-		return -EINVAL;
+	//if ((v_sync_width == 0) || (h_sync_width == 0))
+	//	return -EINVAL;
 
 	/* adapt panel to ipu restricitions */
 	if (v_end_width < 2) {
