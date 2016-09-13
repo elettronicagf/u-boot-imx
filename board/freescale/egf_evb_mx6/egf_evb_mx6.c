@@ -387,6 +387,14 @@ static void blc1102_enable(struct display_info_t const *dev)
 	gpio_direction_output(DISP0_BKL_PWR_EN_GPIO, 1);
 }
 
+static void blc1081_enable(struct display_info_t const *dev)
+{
+	gpio_direction_output(DISP0_EN, 1);
+	gpio_direction_output(DISP0_BKL_PWM_GPIO, 1);
+	gpio_direction_output(DISP0_BKL_PWR_EN_GPIO, 1);
+
+}
+
 struct display_info_t const displays[] = {
 	{
 		.bus	= 0,
@@ -473,6 +481,28 @@ struct display_info_t const displays[] = {
 			.hsync_len      = 1,
 			.vsync_len      = 1,
 			.sync           = 0,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= blc1081_enable,
+		.mode	= {
+			.name           = "EGF_BLC1081", /*  WL_AT070TN84-ETT-A1 T1242A 7.0" */
+			.refresh        = 60,
+			.xres           = 800,
+			.yres           = 480,
+			.pixclock       = 25000,
+			.left_margin    = 45,
+			.right_margin   = 210,
+			.upper_margin   = 22,
+			.lower_margin   = 132,
+			.hsync_len      = 0,
+			.vsync_len      = 0,
+			.sync           = FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
 			.vmode          = FB_VMODE_NONINTERLACED
 		}
 	},
