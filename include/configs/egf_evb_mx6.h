@@ -250,22 +250,38 @@
 			"if test \"${panel}\" = \"EGF_BLC1136\"; then " \
 				"fdt rm EGF_BLC1134; " \
 				"fdt rm EGF_BLC1133; " \
+				"fdt rm ft5x06; " \
+				"fdt rm ar1020; " \
 			"elif test \"${panel}\" = \"EGF_BLC1134\"; then " \
 				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
+				"fdt rm ft5x06; " \
+				"fdt rm ar1020; " \
 			"elif test \"${panel}\" = \"EGF_BLC1133\"; then " \
 				"fdt rm EGF_BLC1134; " \
 				"fdt rm EGF_BLC1136; " \
+				"fdt rm ar1020; " \
 			"elif test \"${panel}\" = \"EGF_BLC1093\"; then " \
 				"fdt rm EGF_BLC1134; " \
 				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
+				"fdt rm ft5x06; " \
+				"fdt rm ar1020; " \
 				"fdt set mxcfb0 disp_dev \"lcd\"; " \
 				"fdt set mxcfb0 mode_str \"EGF_BLC1093\"; " \
+			"elif test \"${panel}\" = \"EGF_BLC1081\"; then " \
+				"fdt rm EGF_BLC1134; " \
+				"fdt rm EGF_BLC1136; " \
+				"fdt rm EGF_BLC1133; " \
+				"fdt rm ft5x06; " \
+				"fdt set mxcfb0 disp_dev \"lcd\"; " \
+				"fdt set mxcfb0 mode_str \"EGF_BLC1081\"; " \
 			"elif test \"${panel}\" = \"EGF_BLC1102\"; then " \
 				"fdt rm EGF_BLC1134; " \
 				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
+				"fdt rm ft5x06; " \
+				"fdt rm ar1020; " \
 				"fdt set mxcfb0 disp_dev \"lcd\"; " \
 				"fdt set mxcfb0 mode_str \"EGF_BLC1102\"; " \
 			"else " \
@@ -279,7 +295,7 @@
 				"fdt rm mxcfb1; " \
 			"fi;\0" \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
-	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
+	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel}\0" \
 	"loadimage_sd=fatload mmc 0:1 ${loadaddr} ${image}\0" \
 	"loadfdt_sd=fatload mmc 0:1 ${fdt_addr} ${fdt_file}\0" \
 	"loadsplash_sd=fatload mmc 0:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
@@ -300,7 +316,7 @@
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"fi; " \
 		"fi;\0 " \
-	"emmcargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} root=/dev/mmcblk2p2 rootwait rw \0" \
+	"emmcargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} root=/dev/mmcblk2p2 rootwait rw panel=${panel}\0" \
 	"loadimage_emmc=fatload mmc 1:1 ${loadaddr} ${image}\0" \
 	"loadfdt_emmc=fatload mmc 1:1 ${fdt_addr} ${fdt_file}\0" \
 	"loadsplash_emmc=fatload mmc 1:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
@@ -318,7 +334,7 @@
 		"fi;\0 " \
 	"loadfdt_usb=fatload usb 0 ${fdt_addr} ${fdt_file}\0" \
 	"loadimage_usb=fatload usb 0 ${loadaddr} ${image}\0" \
-	"usbargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
+	"usbargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel}\0" \
 	"usbboot=echo Try Booting from USB...;" \
 		"usb start;" \
 		"if run loadfdt_usb; then " \
