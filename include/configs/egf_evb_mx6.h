@@ -279,31 +279,10 @@
 				"fdt rm mxcfb1; " \
 			"fi;\0" \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
-	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
-	"loadimage_sd=fatload mmc 0:1 ${loadaddr} ${image}\0" \
-	"loadfdt_sd=fatload mmc 0:1 ${fdt_addr} ${fdt_file}\0" \
-	"loadsplash_sd=fatload mmc 0:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
-	"sdboot=echo Try Booting from SD...; " \
-		"mmc rescan; " \
-		"if run loadfdt_sd; then " \
-			"if run loadimage_sd; then " \
-				"if test -e mmc 0:1 update.bin; then " \
-					"echo Loading update from SDCard; " \
-				"else " \
-					"echo Booting from SD Card;" \
-					"setenv sdargs ${sdargs} root=/dev/mmcblk0p2 rootwait rw; " \
-				"fi; " \
-				"run sdargs; " \
-				"run loadsplash_sd; " \
-				"echo ${bootargs}; " \
-				"run fix_dt; " \
-				"bootz ${loadaddr} - ${fdt_addr}; " \
-			"fi; " \
-		"fi;\0 " \
 	"emmcargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} root=/dev/mmcblk2p2 rootwait rw \0" \
-	"loadimage_emmc=fatload mmc 1:1 ${loadaddr} ${image}\0" \
-	"loadfdt_emmc=fatload mmc 1:1 ${fdt_addr} ${fdt_file}\0" \
-	"loadsplash_emmc=fatload mmc 1:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
+	"loadimage_emmc=fatload mmc 0:1 ${loadaddr} ${image}\0" \
+	"loadfdt_emmc=fatload mmc 0:1 ${fdt_addr} ${fdt_file}\0" \
+	"loadsplash_emmc=fatload mmc 0:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
 	"emmcboot=echo Try Booting from eMMC...; " \
 		"mmc rescan; " \
 		"if run loadfdt_emmc; then " \
@@ -344,8 +323,6 @@
 			"bootz ${loadaddr} - ${fdt_addr} \0" \
 	"bootcmd=echo Booting...; " \
 	"run locknor;" \
-	/* Try sdcard update */ \
-	"run sdboot;" \
 	/* Try usb update key */ \
 	"run usbboot;" \
 	/* Boot from eMMC */ \

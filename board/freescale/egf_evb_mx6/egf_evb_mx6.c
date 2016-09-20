@@ -108,7 +108,6 @@ void prepare_boot_env(void)
 
 #ifdef CONFIG_FSL_ESDHC
 struct fsl_esdhc_cfg usdhc_cfg[2] = {
-	{USDHC1_BASE_ADDR, 0, 4},
 	{USDHC3_BASE_ADDR},
 };
 
@@ -147,9 +146,6 @@ int board_mmc_getcd(struct mmc *mmc)
 	int ret = 0;
 
 	switch (cfg->esdhc_base) {
-	case USDHC1_BASE_ADDR:
-		ret = !gpio_get_value(SD1_CD_GPIO);
-		break;
 	case USDHC3_BASE_ADDR:
 		ret = 1; /* eMMC is always present */
 		break;
@@ -173,11 +169,7 @@ int board_mmc_init(bd_t *bis)
 	for (i = 0; i < CONFIG_SYS_FSL_USDHC_NUM; i++) {
 		switch (i) {
 		case 0:
-			gpio_direction_input(SD1_CD_GPIO);
-			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
-			break;
-		case 1:
-			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
 			break;
 		default:
 			printf("Warning: you configured more USDHC controllers"
@@ -199,17 +191,11 @@ int board_mmc_init(bd_t *bis)
 	 * Upon reading BOOT_CFG register the following map is done:
 	 * Bit 11 and 12 of BOOT_CFG register can determine the current
 	 * mmc port
-	 * 0x1                  SD1 - microSD
-	 * 0x2                  SD3 - eMMC
+	 * 0x1                  SD3 - eMMC
 	 */
 
 	switch (reg & 0x3) {
 	case 0x1:
-		usdhc_cfg[0].esdhc_base = USDHC1_BASE_ADDR;
-		usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
-		gd->arch.sdhc_clk = usdhc_cfg[0].sdhc_clk;
-		break;
-	case 0x2:
 		usdhc_cfg[0].esdhc_base = USDHC3_BASE_ADDR;
 		usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
 		gd->arch.sdhc_clk = usdhc_cfg[0].sdhc_clk;
