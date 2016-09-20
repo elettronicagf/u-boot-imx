@@ -722,7 +722,7 @@ int board_ehci_hcd_init(int port)
 {
 	u32 *usbnc_usb_ctrl;
 
-	if (port > 1)
+	if (port > 0)
 		return -EINVAL;
 
 	usbnc_usb_ctrl = (u32 *)(USB_BASE_ADDR + USB_OTHERREGS_OFFSET +
@@ -737,16 +737,17 @@ int board_ehci_power(int port, int on)
 {
 	switch (port) {
 	case 0:
-		if (on)
-			gpio_direction_output(USB_OTG_POWER_ENABLE_GPIO,1);
-		else
-			gpio_direction_output(USB_OTG_POWER_ENABLE_GPIO,0);
-		break;
-	case 1:
-		if (on)
-			gpio_direction_output(USB_H1_POWER_ENABLE_GPIO,1);
-		else
-			gpio_direction_output(USB_H1_POWER_ENABLE_GPIO,0);
+		if (on) {
+			//Initialize IUSB pin status to BOOST
+			gpio_direction_output((IMX_GPIO_NR(2, 1)),0); //nIUSB1 = 0
+			gpio_direction_output((IMX_GPIO_NR(2, 2)),1); //IUSB2 = 1
+			gpio_direction_output((IMX_GPIO_NR(2, 6)),0); //IUSB3 = 0
+		} else {
+			//Reset IUSB pin status to 1500mA
+			gpio_direction_output((IMX_GPIO_NR(2, 1)),1); //nIUSB1 = 1
+			gpio_direction_output((IMX_GPIO_NR(2, 2)),1); //IUSB2 = 1
+			gpio_direction_output((IMX_GPIO_NR(2, 6)),0); //IUSB3 = 0
+		}
 		break;
 	default:
 		printf("MXC USB port %d not yet supported\n", port);
