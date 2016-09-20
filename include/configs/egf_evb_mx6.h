@@ -270,13 +270,6 @@
 				"fdt set mxcfb0 mode_str \"EGF_BLC1102\"; " \
 			"else " \
 				"echo invalid display selection ${panel}; " \
-			"fi;" \
-			"i2c dev 2; " \
-			"if i2c probe 0x50 ; then " \
-				"echo \"------ have HDMI monitor\";" \
-			"else " \
-				"echo \"------ No HDMI monitor\";" \
-				"fdt rm mxcfb1; " \
 			"fi;\0" \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
 	"emmcargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} root=/dev/mmcblk2p2 rootwait rw \0" \
