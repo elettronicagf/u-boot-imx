@@ -1263,32 +1263,10 @@ static void fix_clocks(void)
 		writel(reg, &ccm_regs->cbcdr);
 		//Wait till busy bits clear
 		while((readl(&ccm_regs->cdhipr) & 0x3F) != 0);
-		//Set pre_periph_clk_sel to PLL2
-		reg = readl(&ccm_regs->cbcmr);
-		reg &= ~MXC_CCM_CBCMR_PRE_PERIPH_CLK_SEL_MASK;
-		writel(reg, &ccm_regs->cbcmr);
-		//Switch back periph_clk_sel to pre_periph_clk
-		reg = readl(&ccm_regs->cbcdr);
-		reg &= ~MXC_CCM_CBCDR_PERIPH_CLK_SEL;
-		writel(reg, &ccm_regs->cbcdr);
-		//Wait for busy bits to clear
-		while((readl(&ccm_regs->cdhipr) & 0x3F) != 0);
-	} else {
-		//Switch periph_clk2_sel to OSC
-		reg = readl(&ccm_regs->cbcmr);
-		reg &= ~MXC_CCM_CBCMR_PERIPH_CLK2_SEL_MASK;
-		reg |= 1 << MXC_CCM_CBCMR_PERIPH_CLK2_SEL_OFFSET;
-		writel(reg, &ccm_regs->cbcmr);
-		//Switch periph_clk_sel to periph_clk2
-		reg = readl(&ccm_regs->cbcdr);
-		reg |= MXC_CCM_CBCDR_PERIPH_CLK_SEL;
-		writel(reg, &ccm_regs->cbcdr);
-		//Wait for busy bits to clear
-		while((readl(&ccm_regs->cdhipr) & 0x3F) != 0);
 		//Set pre_periph_clk_sel to PLL2 PFD2
 		reg = readl(&ccm_regs->cbcmr);
 		reg &= ~MXC_CCM_CBCMR_PRE_PERIPH_CLK_SEL_MASK;
-		reg |= 1 << MXC_CCM_CBCMR_PRE_PERIPH_CLK_SEL_OFFSET;
+		reg |= (0x1 << MXC_CCM_CBCMR_PRE_PERIPH_CLK_SEL_OFFSET);
 		writel(reg, &ccm_regs->cbcmr);
 		//Set AHB_PODF to 3
 		reg = readl(&ccm_regs->cbcdr);
@@ -1298,7 +1276,19 @@ static void fix_clocks(void)
 		reg &= ~MXC_CCM_CBCDR_PERIPH_CLK_SEL;
 		writel(reg, &ccm_regs->cbcdr);
 		//Wait for busy bits to clear
-		while((readl(&ccm_regs->cdhipr) & 0x1003F) != 0);
+		while((readl(&ccm_regs->cdhipr) & 0x3F) != 0);
+	}
+}
+
+void p_udelay(int time)
+{
+	int i, j;
+
+	for (i = 0; i < time; i++) {
+		for (j = 0; j < 200; j++) {
+			asm("nop");
+			asm("nop");
+		}
 	}
 }
 
@@ -1327,6 +1317,8 @@ void board_init_f(ulong dummy)
 
 	/* DDR initialization */
 	spl_dram_init();
+
+	p_udelay(1000);
 
 	/* Clear the BSS. */
 	memset(__bss_start, 0, __bss_end - __bss_start);
