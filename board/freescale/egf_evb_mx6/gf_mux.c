@@ -207,7 +207,7 @@ static struct i2c_pads_info mx6dl_i2c_pad_info2 = {
 
 static void my_i2c_init_mux(void)
 {
-	if (is_cpu_type(MXC_CPU_MX6Q)) {
+	if (is_cpu_type(MXC_CPU_MX6Q) || is_cpu_type(MXC_CPU_MX6D)) {
 		setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c_pad_info0);
 		setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c_pad_info1);
 		setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c_pad_info2);
