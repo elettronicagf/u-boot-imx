@@ -193,5 +193,24 @@ static struct mx6_mmdc_calibration mx6dq_128x16_mmdc_calib_default = {
 	.p0_mpwrdlctl = 0x36323C3E,
 };
 
+static struct mx6_mmdc_calibration mx6dq_128x16_mmdc_calib_x64 = {
+	/* write leveling calibration determine */
+	.p0_mpwldectrl0 = 0x00120015,
+	.p0_mpwldectrl1 = 0x0019000C,
+	.p1_mpwldectrl0 = 0x00100026,
+	.p1_mpwldectrl1 = 0x00060013,
+	/* Read DQS Gating calibration */
+	.p0_mpdgctrl0 = 0x0268030C,
+	.p0_mpdgctrl1 = 0x02640268,
+	.p1_mpdgctrl0 = 0x03080310,
+	.p1_mpdgctrl1 = 0x02680248,
+	/* Read Calibration: DQS delay relative to DQ read access */
+	.p0_mprddlctl = 0x44343636,
+	.p1_mprddlctl = 0x3A3A3248,
+	/* Write Calibration: DQ/DM delay relative to DQS write access */
+	.p0_mpwrdlctl = 0x363A3C3A,
+	.p1_mpwrdlctl = 0x46304640,
+};
+
 
 #endif
