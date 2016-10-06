@@ -56,6 +56,7 @@
 #ifdef CONFIG_SPL_BUILD
 #include "gf_ddr_parameters.h"
 #endif
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #define WID_LENGTH					15
@@ -279,10 +280,12 @@ static void enable_lvds(struct display_info_t const *dev)
 	struct iomuxc *iomux = (struct iomuxc *)
 				IOMUXC_BASE_ADDR;
 	u32 reg = readl(&iomux->gpr[2]);
-	reg |= IOMUXC_GPR2_DATA_WIDTH_CH1_24BIT;
+	if (dev->pixfmt == IPU_PIX_FMT_RGB24)
+		reg |= IOMUXC_GPR2_DATA_WIDTH_CH1_24BIT;
+	else
+		reg |= IOMUXC_GPR2_DATA_WIDTH_CH1_18BIT;
 	writel(reg, &iomux->gpr[2]);
 }
-
 
 static void vpll_change_frequency(unsigned int pixclock){
 	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
@@ -395,6 +398,14 @@ static void blc1081_enable(struct display_info_t const *dev)
 
 }
 
+static void blc1135_enable(struct display_info_t const *dev)
+{
+	vpll_change_frequency(get_disp_pix_clock(dev));
+	enable_lvds(dev);
+	gpio_direction_output(DISP1_BKL_PWM_GPIO, 1);
+	gpio_direction_output(DISP1_BKL_PWR_EN_GPIO, 1);
+}
+
 struct display_info_t const displays[] = {
 	{
 		.bus	= 0,
@@ -407,13 +418,13 @@ struct display_info_t const displays[] = {
 			.refresh        = 60,
 			.xres           = 800,
 			.yres           = 600,
-			.pixclock       = 25000,
+			.pixclock       = 22222,
 			.left_margin    = 128,
 			.right_margin   = 128,
 			.upper_margin   = 14,
 			.lower_margin   = 14,
 			.hsync_len      = 60,
-			.vsync_len      = 1,
+			.vsync_len      = 20,
 			.sync           = FB_SYNC_EXT,
 			.vmode          = FB_VMODE_NONINTERLACED
 		}
@@ -525,6 +536,28 @@ struct display_info_t const displays[] = {
 			.hsync_len      = 30,
 			.vsync_len      = 3,
 			.sync           = 0,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB666,
+		.detect	= NULL,
+		.enable	= blc1135_enable,
+		.mode	= {
+			.name           = "EGF_BLC1135", /* 13-080SMLB4RB0-S Digiwise 18" */
+			.refresh        = 60,
+			.xres           = 800,
+			.yres           = 600,
+			.pixclock       = 21854,
+			.left_margin    = 46,
+			.right_margin   = 16,
+			.upper_margin   = 23,
+			.lower_margin   = 12,
+			.hsync_len      = 40,
+			.vsync_len      = 20,
+			.sync           = FB_SYNC_EXT,
 			.vmode          = FB_VMODE_NONINTERLACED
 		}
 	}
