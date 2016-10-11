@@ -129,8 +129,8 @@ static struct mx6_ddr3_cfg mt41k128m16jt_125 = {
 	.trasmin = 3500,
 };
 
-/* MT41K128M16JT-125 (4Gb density) */
-static struct mx6_ddr3_cfg mt41k256m16ha_125 = {
+/* MT41K256M16TW-107 (4Gb density) */
+static struct mx6_ddr3_cfg mt41k256m16tw_107 = {
 	.mem_speed = 1600,
 	.density = 4,
 	.width = 16,
