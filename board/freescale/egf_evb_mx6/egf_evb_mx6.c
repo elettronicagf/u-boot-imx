@@ -500,6 +500,28 @@ struct display_info_t const displays[] = {
 		.addr	= 0,
 		.pixfmt	= IPU_PIX_FMT_RGB24,
 		.detect	= NULL,
+		.enable	= blc1093_enable,
+		.mode	= {
+			.name           = "EGF_BLC1113", /*  KWH070KQ13-F01 Formike 7.0 without touchscreen" */
+			.refresh        = 60,
+			.xres           = 800,
+			.yres           = 480,
+			.pixclock       = 25000,
+			.left_margin    = 45,
+			.right_margin   = 210,
+			.upper_margin   = 22,
+			.lower_margin   = 132,
+			.hsync_len      = 1,
+			.vsync_len      = 1,
+			.sync           = 0,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
 		.enable	= blc1081_enable,
 		.mode	= {
 			.name           = "EGF_BLC1081", /*  WL_AT070TN84-ETT-A1 T1242A 7.0" */
@@ -546,7 +568,7 @@ struct display_info_t const displays[] = {
 		.detect	= NULL,
 		.enable	= blc1135_enable,
 		.mode	= {
-			.name           = "EGF_BLC1135", /* 13-080SMLB4RB0-S Digiwise 18" */
+			.name           = "EGF_BLC1135", /* 13-080SMLB4RB0-S Digiwise 8" */
 			.refresh        = 60,
 			.xres           = 800,
 			.yres           = 600,
