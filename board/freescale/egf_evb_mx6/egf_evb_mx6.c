@@ -375,6 +375,17 @@ static void blc1136_enable(struct display_info_t const *dev)
 
 }
 
+static void blc1148_enable(struct display_info_t const *dev)
+{
+	vpll_change_frequency(get_disp_pix_clock(dev));
+	enable_lvds(dev);
+	gpio_direction_output(DISP1_LVDS_GPIO, 1);
+	gpio_direction_output(DISP1_EN, 1);
+	gpio_direction_output(DISP1_BKL_PWM_GPIO, 1);
+	gpio_direction_output(DISP1_BKL_PWR_EN_GPIO, 1);
+
+}
+
 static void blc1093_enable(struct display_info_t const *dev)
 {
 	gpio_direction_output(DISP0_EN, 1);
@@ -424,6 +435,28 @@ struct display_info_t const displays[] = {
 			.upper_margin   = 14,
 			.lower_margin   = 14,
 			.hsync_len      = 60,
+			.vsync_len      = 20,
+			.sync           = FB_SYNC_EXT,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= blc1148_enable,
+		.mode	= {
+			.name           = "EGF_BLC1148", /* G104S1-L01 Innolux 10.4" */
+			.refresh        = 60,
+			.xres           = 1024,
+			.yres           = 600,
+			.pixclock       = 19531,
+			.left_margin    = 160,
+			.right_margin   = 160,
+			.upper_margin   = 17,
+			.lower_margin   = 18,
+			.hsync_len      = 40,
 			.vsync_len      = 20,
 			.sync           = FB_SYNC_EXT,
 			.vmode          = FB_VMODE_NONINTERLACED

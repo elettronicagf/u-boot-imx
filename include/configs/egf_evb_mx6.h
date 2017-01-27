@@ -251,24 +251,35 @@
 				"fdt rm EGF_BLC1134; " \
 				"fdt rm EGF_BLC1133; " \
 				"fdt rm EGF_BLC1135; " \
+				"fdt rm EGF_BLC1148; " \
+				"fdt rm ft5x06; " \
+				"fdt rm ar1020; " \
+			"elif test \"${panel}\" = \"EGF_BLC1148\"; then " \
+				"fdt rm EGF_BLC1134; " \
+				"fdt rm EGF_BLC1133; " \
+				"fdt rm EGF_BLC1135; " \
+				"fdt rm EGF_BLC1136; " \
 				"fdt rm ft5x06; " \
 				"fdt rm ar1020; " \
 			"elif test \"${panel}\" = \"EGF_BLC1134\"; then " \
 				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
 				"fdt rm EGF_BLC1135; " \
+				"fdt rm EGF_BLC1148; " \
 				"fdt rm ft5x06; " \
 				"fdt rm ar1020; " \
 			"elif test \"${panel}\" = \"EGF_BLC1133\"; then " \
 				"fdt rm EGF_BLC1134; " \
 				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1135; " \
+				"fdt rm EGF_BLC1148; " \
 				"fdt rm ar1020; " \
 			"elif test \"${panel}\" = \"EGF_BLC1093\"; then " \
 				"fdt rm EGF_BLC1134; " \
 				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
 				"fdt rm EGF_BLC1135; " \
+				"fdt rm EGF_BLC1148; " \
 				"fdt rm ft5x06; " \
 				"fdt set mxcfb0 disp_dev \"lcd\"; " \
 				"fdt set mxcfb0 mode_str \"EGF_BLC1093\"; " \
@@ -277,6 +288,7 @@
 				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
 				"fdt rm EGF_BLC1135; " \
+				"fdt rm EGF_BLC1148; " \
 				"fdt rm ft5x06; " \
 				"fdt rm ar1020; " \
 				"fdt set mxcfb0 disp_dev \"lcd\"; " \
@@ -286,6 +298,7 @@
 				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
 				"fdt rm EGF_BLC1135; " \
+				"fdt rm EGF_BLC1148; " \
 				"fdt rm ft5x06; " \
 				"fdt set mxcfb0 disp_dev \"lcd\"; " \
 				"fdt set mxcfb0 mode_str \"EGF_BLC1081\"; " \
@@ -294,6 +307,7 @@
 				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
 				"fdt rm EGF_BLC1135; " \
+				"fdt rm EGF_BLC1148; " \
 				"fdt rm ft5x06; " \
 				"fdt rm ar1020; " \
 				"fdt set mxcfb0 disp_dev \"lcd\"; " \
@@ -302,6 +316,7 @@
 				"fdt rm EGF_BLC1134; " \
 				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
+				"fdt rm EGF_BLC1148; " \
 				"fdt set mxcfb0 interface_pix_fmt RGB666; " \
 				"fdt set mxcfb0 default_bpp <18>; " \
 				"fdt set lvds_channel1 fsl,data-width <18>; " \
