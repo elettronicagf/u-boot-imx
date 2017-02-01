@@ -247,27 +247,8 @@
 			"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 			"env default -f -a;\0" \
 	"fix_dt=fdt addr ${fdt_addr}; " \
-			"if test \"${panel}\" = \"EGF_BLC1136\"; then " \
-				"fdt rm EGF_BLC1134; " \
-				"fdt rm EGF_BLC1133; " \
-			"elif test \"${panel}\" = \"EGF_BLC1134\"; then " \
-				"fdt rm EGF_BLC1136; " \
-				"fdt rm EGF_BLC1133; " \
-			"elif test \"${panel}\" = \"EGF_BLC1133\"; then " \
-				"fdt rm EGF_BLC1134; " \
-				"fdt rm EGF_BLC1136; " \
-			"elif test \"${panel}\" = \"EGF_BLC1093\"; then " \
-				"fdt rm EGF_BLC1134; " \
-				"fdt rm EGF_BLC1136; " \
-				"fdt rm EGF_BLC1133; " \
-				"fdt set mxcfb0 disp_dev \"lcd\"; " \
-				"fdt set mxcfb0 mode_str \"EGF_BLC1093\"; " \
-			"elif test \"${panel}\" = \"EGF_BLC1102\"; then " \
-				"fdt rm EGF_BLC1134; " \
-				"fdt rm EGF_BLC1136; " \
-				"fdt rm EGF_BLC1133; " \
-				"fdt set mxcfb0 disp_dev \"lcd\"; " \
-				"fdt set mxcfb0 mode_str \"EGF_BLC1102\"; " \
+			"if test \"${panel}\" = \"EGF_BLC1093\"; then " \
+				"echo Panel: EGF_BLC1093; " \
 			"else " \
 				"echo invalid display selection ${panel}; " \
 			"fi;\0" \
