@@ -162,7 +162,10 @@
 		"sf unlock;" \
 		"sf erase 0x0 0x3F0000;" \
 		"sf write ${spl_copy_addr} " __stringify(CONFIG_SYS_SPI_SPL_OFFS) " 0x20000;" \
-		"init_eeprom " CONFIG_WID ";" \
+		"mw.l 11fffff8 0100fbfa 1;" \
+		"if cmp.b 11fffffc 11fffff8 4; then " \
+			"init_eeprom " CONFIG_WID ";" \
+		"fi;" \
 		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 		"sf write ${uboot_img_copy_addr} " __stringify(CONFIG_SYS_SPI_U_BOOT_OFFS) " 0x100000;" \
 		"sf lock;" \
