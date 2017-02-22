@@ -143,10 +143,36 @@ static struct mx6_ddr3_cfg mt41k256m16tw_107 = {
 	.trasmin = 3500,
 };
 
+/* K4B4G1646D-BMK0 (4Gb density) */
+static struct mx6_ddr3_cfg k4b4g1646d_bmk0 = {
+	.mem_speed = 1600,
+	.density = 4,
+	.width = 16,
+	.banks = 8,
+	.rowaddr = 15,
+	.coladdr = 10,
+	.pagesz = 2,
+	.trcd = 1500,
+	.trcmin = 5250,
+	.trasmin = 3750,
+};
+
 
 /*
  * calibration - these are the various CPU/DDR3 combinations we support
  */
+static struct mx6_mmdc_calibration mx6s_128x16_mmdc_calib_smr4711 = {
+	/* write leveling calibration determine */
+	.p0_mpwldectrl0 = 0x00430043,
+	.p0_mpwldectrl1 = 0x003B003C,
+	/* Read DQS Gating calibration */
+	.p0_mpdgctrl0 = 0x02180218,
+	.p0_mpdgctrl1 = 0x02100214,
+	/* Read Calibration: DQS delay relative to DQ read access */
+	.p0_mprddlctl = 0x44444646,
+	/* Write Calibration: DQ/DM delay relative to DQS write access */
+	.p0_mpwrdlctl = 0x3A343034,
+};
 
 static struct mx6_mmdc_calibration mx6sdl_128x16_mmdc_calib_default = {
 	/* write leveling calibration determine */

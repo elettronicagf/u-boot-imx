@@ -21,4 +21,7 @@ mv u-boot.imx binaries/u-boot.imx.wid0510ad0101-$VERSION
 make CROSS_COMPILE=arm-egf-linux-gnueabi- egf_evb_mx6_mfg_wid0510af0101_config
 make CROSS_COMPILE=arm-egf-linux-gnueabi- -j8
 mv u-boot.imx binaries/u-boot.imx.wid0510af0101-$VERSION
+make CROSS_COMPILE=arm-egf-linux-gnueabi- egf_evb_mx6_mfg_wid0510ag0101_config
+make CROSS_COMPILE=arm-egf-linux-gnueabi- -j8
+mv u-boot.imx binaries/u-boot.imx.wid0510ag0101-$VERSION
 

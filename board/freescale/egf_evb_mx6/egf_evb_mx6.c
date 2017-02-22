@@ -1381,9 +1381,11 @@ void board_recovery_setup(void)
 #define REV_WID0510_AE0101 "WID0510_AE01.01"
 #define REV_WID0510_AD0101 "WID0510_AD01.01"
 #define REV_WID0510_AF0101 "WID0510_AF01.01"
+#define REV_WID0510_AG0101 "WID0510_AG01.01"
 
 #define MT41K128M16JT_125 		1
 #define MT41K256M16TW_107 		2
+#define K4B4G1646D_BMK0 		3
 #define DDR_BUS_WIDTH_16BIT		16
 #define DDR_BUS_WIDTH_32BIT		32
 #define DDR_BUS_WIDTH_64BIT		64
@@ -1453,6 +1455,14 @@ static struct egf_som the_som_WID_0510_AF0101 = {
 		&mx6sdl_128x16_mmdc_calib_default,
 };
 
+static struct egf_som the_som_WID_0510_AG0101 = {
+		K4B4G1646D_BMK0,
+		DDR_BUS_WIDTH_32BIT,
+		1,
+		&mx6sdl_ddr_ioregs_standard,
+		&mx6sdl_grp_ioregs_standard,
+		&mx6s_128x16_mmdc_calib_smr4711,
+};
 
 int load_revision(void)
 {
@@ -1501,6 +1511,12 @@ int load_revision(void)
 		/* SW Revision is WID0510_AF01.01 */
 		printf("GF Software ID Code: WID0510_AF01.01\n");
 		memcpy(&the_som, &the_som_WID_0510_AF0101, sizeof(the_som));
+	}
+	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AG0101))
+	{
+		/* SW Revision is WID0510_AG01.01 */
+		printf("GF Software ID Code: WID0510_AG01.01\n");
+		memcpy(&the_som, &the_som_WID_0510_AG0101, sizeof(the_som));
 	}
 	else {
 		printf("Unrecognized EGF SW ID Code: %s\n",egf_sw_id_code);
@@ -1578,6 +1594,9 @@ static void spl_dram_init(void)
 		break;
 	case MT41K256M16TW_107:
 		memory_timings = &mt41k256m16tw_107;
+		break;
+	case K4B4G1646D_BMK0:
+		memory_timings = &k4b4g1646d_bmk0;
 		break;
 	default:
 		puts("Error: Invalid Memory Configuration\n");
