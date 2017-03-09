@@ -277,6 +277,10 @@
 				"fdt rm EGF_BLC1135; " \
 				"fdt rm EGF_BLC1148; " \
 				"fdt rm ar1020; " \
+				"fdt set backlight2 status okay; " \
+				"fdt set backlight1 status \"disabled\"; " \
+				"fdt set panel1 status disabled; " \
+				"fdt set panel2 status okay; " \
 			"elif test \"${panel}\" = \"EGF_BLC1093\"; then " \
 				"fdt rm EGF_BLC1134; " \
 				"fdt rm EGF_BLC1136; " \
