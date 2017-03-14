@@ -77,6 +77,19 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define PICOS2KHZ(a) (1000000000UL/(a))
 
+#define REV_WID0533_AA0101 "WID0533_AA01.01"
+
+static int gf_strcmp(const char * cs, const char * ct) {
+	register signed char __res;
+
+	while (1) {
+		if ((__res = *cs - *ct++) != 0 || !*cs++)
+			break;
+	}
+
+	return __res;
+}
+
 int dram_init(void)
 {
 	gd->ram_size = imx_ddr_size();
@@ -619,6 +632,73 @@ struct display_info_t const displays[] = {
 };
 size_t display_count = ARRAY_SIZE(displays);
 
+int board_video_skip(void)
+{
+	char * board_sw_id_code;
+	int i;
+	int ret;
+	char panel[100];
+	char const *panel_env = getenv("panel");
+
+	panel[0] = 0;
+
+	if (!panel_env){
+		board_sw_id_code = gf_eeprom_get_board_sw_id_code();
+		if (board_sw_id_code)
+		{
+			if(!gf_strcmp(board_sw_id_code, REV_WID0533_AA0101))
+			{
+				strcpy(panel, "EGF_BLC1133");
+				setenv("panel", panel);
+			}
+		}
+	} else {
+		strcpy(panel, panel_env);
+	}
+
+	if (!strlen(panel)) {
+		for (i = 0; i < display_count; i++) {
+			struct display_info_t const *dev = displays+i;
+			if (dev->detect && dev->detect(dev)) {
+				strcpy(panel,dev->mode.name);
+				printf("auto-detected panel %s\n", panel);
+				break;
+			}
+		}
+		if (!strlen(panel)) {
+			strcpy(panel,displays[0].mode.name);
+			printf("No panel detected: default to %s\n", panel);
+			i = 0;
+		}
+	} else {
+		for (i = 0; i < display_count; i++) {
+			if (!strcmp(panel, displays[i].mode.name))
+				break;
+		}
+	}
+
+	if (i < display_count) {
+		ret = ipuv3_fb_init(&displays[i].mode, 0,
+				    displays[i].pixfmt);
+		if (!ret) {
+			if (displays[i].enable)
+				displays[i].enable(displays + i);
+
+			printf("Display: %s (%ux%u)\n",
+			       displays[i].mode.name,
+			       displays[i].mode.xres,
+			       displays[i].mode.yres);
+		} else
+			printf("LCD %s cannot be configured: %d\n",
+			       displays[i].mode.name, ret);
+	} else {
+		printf("unsupported panel %s\n", panel);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static void enable_vpll(void)
 {
 	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
@@ -935,7 +1015,7 @@ int board_early_init_f(void)
 
 int board_init(void)
 {
-	char * egf_sw_id_code;
+	char * egf_sw_id_code, * board_sw_id_code;
 	int ret;
 
 	/* address of boot parameters */
@@ -948,6 +1028,11 @@ int board_init(void)
 		{
 			printf("System Hang.\n");
 			while(1);
+		}
+		ret = gf_load_board_revision(&board_sw_id_code);
+		if (ret)
+		{
+			printf("Board EEPROM is not valid\n");
 		}
 	}
 
@@ -1368,17 +1453,6 @@ static struct egf_som the_som_WID_0510_AF0101 = {
 		&mx6sdl_128x16_mmdc_calib_default,
 };
 
-
-static int gf_strcmp(const char * cs, const char * ct) {
-	register signed char __res;
-
-	while (1) {
-		if ((__res = *cs - *ct++) != 0 || !*cs++)
-			break;
-	}
-
-	return __res;
-}
 
 int load_revision(void)
 {

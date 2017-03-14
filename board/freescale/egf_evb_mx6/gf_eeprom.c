@@ -636,7 +636,7 @@ int gf_load_som_revision(char ** egf_sw_id_code, int bypass_checks)
 	if (som_eeprom_hw_status == EEPROM_NOT_FOUND)
 	{
 		/* If SOM eeprom is not found stop boot */
-		gf_debug(0,"Eeprom not detected. HW issue?\n");
+		gf_debug(0,"SOM Eeprom not detected. HW issue?\n");
 		return -1;
 	}
 	eeprom_is_empty = som_eeprom_is_new();
@@ -667,7 +667,7 @@ int gf_load_som_revision(char ** egf_sw_id_code, int bypass_checks)
 			*egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
 			serial_number = gf_eeprom_get_som_serial_number();
 			if (serial_number != NULL) {
-				gf_debug(1,"Board Serial Number: %s\n",serial_number);
+				gf_debug(1,"SOM Serial Number: %s\n",serial_number);
 			}
 			/* If SW ID is programmed, eeprom is validated */
 			if (*egf_sw_id_code != NULL)
@@ -737,6 +737,65 @@ int gf_load_som_revision(char ** egf_sw_id_code, int bypass_checks)
 	return -1;
 
 }
+
+int gf_load_board_revision(char ** egf_sw_id_code)
+{
+	int board_eeprom_hw_status;
+	int board_eeprom_protocol;
+	int eeprom_is_empty;
+	char * serial_number;
+
+	init_gf_board_eeprom();
+	/* Detect board eeprom */
+	board_eeprom_hw_status = check_eeprom_hw_board();
+	if (board_eeprom_hw_status == EEPROM_NOT_FOUND)
+	{
+		/* If Board eeprom is not found stop boot */
+		gf_debug(0,"Board Eeprom not detected. HW issue?\n");
+		return -1;
+	}
+	eeprom_is_empty = board_eeprom_is_new();
+	if(eeprom_is_empty != 1)
+	{
+		/* Try to detect board eeprom protocol version */
+		board_eeprom_protocol = identify_eeprom_protocol_board();
+		if (board_eeprom_protocol != EEPROM_UNKNOWN_PROTOCOL)
+		{
+			/* Read board eeprom */
+			load_board_eeprom();
+#ifdef EEPROM_UPGRADE
+			/* If board eeprom is programmed with an old protocol version update it */
+			if (bypass_checks == 0 &&
+				board_eeprom_protocol != EEPROM_UNKNOWN_PROTOCOL &&
+				board_eeprom_protocol < EEPROM_LATEST_PROTOCOL_VERSION)
+			{
+				/* board eeprom upgrade needed */
+				gf_board_eeprom_unlock();
+				upgrade_board_eeprom_to_latest_version();
+				gf_board_eeprom_lock();
+				/* Re-load board eeprom after updating */
+				board_eeprom_protocol = identify_eeprom_protocol_board();
+				load_board_eeprom();
+			}
+#endif
+			/* Get SW ID code and serial number stored in SOM eeprom */
+			*egf_sw_id_code = gf_eeprom_get_board_sw_id_code();
+			serial_number = gf_eeprom_get_board_serial_number();
+			if (serial_number != NULL) {
+				gf_debug(1,"Board Serial Number: %s\n",serial_number);
+			}
+			/* If SW ID is programmed, eeprom is validated */
+			if (*egf_sw_id_code != NULL)
+			{
+				return 0;
+			}
+			gf_debug(0,"Invalid GF Software ID code\n");
+		}
+	}
+	return -1;
+}
+
+
 
 int reset_gf_som_eeprom_content(char* egf_sw_id_code, int ask_confirmation)
 {
