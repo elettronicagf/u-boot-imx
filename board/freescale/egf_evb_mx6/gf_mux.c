@@ -558,6 +558,51 @@ static iomux_v3_cfg_t const hdmi_pads[] = {
 	IOMUX_PADS(PAD_KEY_ROW2__HDMI_TX_CEC_LINE	| HDMI_CEC_PAD_CTRL), // HDMI_CEC
 };
 
+/* Fix pinmux to correctly terminate pin on depopulated boards */
+void egf_wid0533ab0101_fix_mux(void)
+{
+	gpio_direction_output(IMX_GPIO_NR(3,27),0); //TS-nATT_3V3
+
+	SETUP_IOMUX_PAD(PAD_CSI0_DAT6__GPIO5_IO24 | MUX_PAD_CTRL(DIO_PAD_PDOWN_CFG));
+	gpio_direction_output(IMX_GPIO_NR(5,24),0); // AUDIO_I2S_LRCLK
+	SETUP_IOMUX_PAD(PAD_CSI0_DAT4__GPIO5_IO22 	| MUX_PAD_CTRL(DIO_PAD_PDOWN_CFG));
+	gpio_direction_output(IMX_GPIO_NR(5,22),0); // AUDIO_I2S_SCLK
+	SETUP_IOMUX_PAD(PAD_CSI0_DAT7__GPIO5_IO25	| MUX_PAD_CTRL(DIO_PAD_PDOWN_CFG));
+	gpio_direction_output(IMX_GPIO_NR(5,25),0); // AUDIO_I2S_DIN
+	SETUP_IOMUX_PAD(PAD_CSI0_DAT5__GPIO5_IO23	| MUX_PAD_CTRL(DIO_PAD_PDOWN_CFG));
+	gpio_direction_output(IMX_GPIO_NR(5,23),0); // AUDIO_I2S_DOUT
+	SETUP_IOMUX_PAD(PAD_NANDF_CS2__GPIO6_IO15 | MUX_PAD_CTRL(DIO_PUP_PAD_CFG)); // AUDIO_MCLK
+	gpio_direction_output(IMX_GPIO_NR(6,15),1);
+
+	/* UART 1 */
+	SETUP_IOMUX_PAD(PAD_CSI0_DAT10__GPIO5_IO28 | MUX_PAD_CTRL(DIO_PUP_PAD_CFG));
+	gpio_direction_output(IMX_GPIO_NR(5,28),1);
+	SETUP_IOMUX_PAD(PAD_CSI0_DAT11__GPIO5_IO29 | MUX_PAD_CTRL(DIO_PAD_PDOWN_CFG));
+	gpio_direction_output(IMX_GPIO_NR(5,29),0);
+	SETUP_IOMUX_PAD(PAD_EIM_D19__GPIO3_IO19 | MUX_PAD_CTRL(DIO_PUP_PAD_CFG));
+	gpio_direction_output(IMX_GPIO_NR(3,19),1);
+	SETUP_IOMUX_PAD(PAD_EIM_D20__GPIO3_IO20 | MUX_PAD_CTRL(DIO_PAD_PDOWN_CFG));
+	gpio_direction_output(IMX_GPIO_NR(3,20),0);
+
+	/* UART 2 */
+	SETUP_IOMUX_PAD(PAD_SD4_DAT7__GPIO2_IO15 | MUX_PAD_CTRL(DIO_PUP_PAD_CFG));
+	gpio_direction_output(IMX_GPIO_NR(2,15),1);
+	SETUP_IOMUX_PAD(PAD_SD4_DAT4__GPIO2_IO12 | MUX_PAD_CTRL(DIO_PAD_PDOWN_CFG));
+	gpio_direction_output(IMX_GPIO_NR(2,12),0);
+	SETUP_IOMUX_PAD(PAD_SD4_DAT6__GPIO2_IO14 | MUX_PAD_CTRL(DIO_PUP_PAD_CFG));
+	gpio_direction_output(IMX_GPIO_NR(2,14),1);
+	SETUP_IOMUX_PAD(PAD_SD4_DAT5__GPIO2_IO13 | MUX_PAD_CTRL(DIO_PAD_PDOWN_CFG));
+	gpio_direction_output(IMX_GPIO_NR(2,13),0);
+
+	SETUP_IOMUX_PAD(PAD_KEY_ROW4__GPIO4_IO15	| MUX_PAD_CTRL(DIO_PAD_PDOWN_CFG));
+	gpio_direction_output(IMX_GPIO_NR(4,15),0);
+	SETUP_IOMUX_PAD(PAD_KEY_COL4__GPIO4_IO14	| MUX_PAD_CTRL(DIO_PAD_PDOWN_CFG));
+	gpio_direction_output(IMX_GPIO_NR(4,14),0);
+
+	gpio_direction_output(IMX_GPIO_NR(6,3),0); // EXTIO_IN1 - GPIO 163
+
+}
+
 void egf_board_mux_init(int mode)
 {
 	switch(mode){

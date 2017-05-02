@@ -78,6 +78,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define PICOS2KHZ(a) (1000000000UL/(a))
 
 #define REV_WID0533_AA0101 "WID0533_AA01.01"
+#define REV_WID0533_AB0101 "WID0533_AB01.01"
 
 static int gf_strcmp(const char * cs, const char * ct) {
 	register signed char __res;
@@ -651,6 +652,11 @@ int board_video_skip(void)
 				strcpy(panel, "EGF_BLC1133");
 				setenv("panel", panel);
 			}
+			if(!gf_strcmp(board_sw_id_code, REV_WID0533_AB0101))
+			{
+				strcpy(panel, "EGF_BLC1133");
+				setenv("panel", panel);
+			}
 		}
 	} else {
 		strcpy(panel, panel_env);
@@ -1034,6 +1040,15 @@ int board_init(void)
 		{
 			printf("Board EEPROM is not valid\n");
 		}
+
+		if (board_sw_id_code)
+		{
+			if(!gf_strcmp(board_sw_id_code, REV_WID0533_AB0101))
+			{
+				egf_wid0533ab0101_fix_mux();
+			}
+		}
+
 	}
 
 	return 0;

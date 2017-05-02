@@ -4,6 +4,7 @@
 #define APPLICATION_MUX_MODE	 2
 
 void egf_board_mux_init(int mode);
+void egf_wid0533ab0101_fix_mux(void);
 #define SPINOR_WP_GPIO 				IMX_GPIO_NR(3, 8)
 #define SD2_CD_GPIO					IMX_GPIO_NR(1, 4)
 #define SD1_CD_GPIO					IMX_GPIO_NR(6, 4)
