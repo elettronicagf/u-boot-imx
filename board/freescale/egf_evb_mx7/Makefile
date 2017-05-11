@@ -4,6 +4,7 @@
 #
 
 obj-y  := egf_evb_mx7.o
+obj-$(CONFIG_SPL_BUILD) += egf_evb_mx7_spl.o
 
 extra-$(CONFIG_USE_PLUGIN) :=  plugin.bin
 $(obj)/plugin.bin: $(obj)/plugin.o
