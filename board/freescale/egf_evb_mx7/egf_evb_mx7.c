@@ -7,6 +7,7 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/mx7-pins.h>
+#include <asm/errno.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/gpio.h>
 #include <asm/imx-common/iomux-v3.h>
@@ -1049,88 +1050,186 @@ int checkboard(void)
 	return 0;
 }
 
-#ifdef CONFIG_FSL_FASTBOOT
-void board_fastboot_setup(void)
-{
-	switch (get_boot_device()) {
-#if defined(CONFIG_FASTBOOT_STORAGE_MMC)
-	case SD1_BOOT:
-	case MMC1_BOOT:
-		if (!getenv("fastboot_dev"))
-			setenv("fastboot_dev", "mmc0");
-		if (!getenv("bootcmd"))
-			setenv("bootcmd", "boota mmc0");
-		break;
-	case SD3_BOOT:
-	case MMC3_BOOT:
-		if (!getenv("fastboot_dev"))
-			setenv("fastboot_dev", "mmc1");
-		if (!getenv("bootcmd"))
-			setenv("bootcmd", "boota mmc1");
-		break;
-#endif /*CONFIG_FASTBOOT_STORAGE_MMC*/
-	default:
-		printf("unsupported boot devices\n");
-		break;
-	}
-}
+#if defined(CONFIG_SPL_BUILD)
+#include <spl.h>
 
-#ifdef CONFIG_ANDROID_RECOVERY
+#define DDR_TYPE_DET   IMX_GPIO_NR(1, 12)
 
-/* Use S3 button for recovery key */
-#define GPIO_VOL_DN_KEY IMX_GPIO_NR(5, 10)
-iomux_v3_cfg_t const recovery_key_pads[] = {
-	(MX7D_PAD_SD2_WP__GPIO5_IO10 | MUX_PAD_CTRL(BUTTON_PAD_CTRL)),
+static iomux_v3_cfg_t const ddr_type_detection_pads[] = {
+	/* ddr type detection: 512MB or 1GB */
+	MX7D_PAD_GPIO1_IO12__GPIO1_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
-int check_recovery_cmd_file(void)
+static void setup_iomux_ddr_type_detection(void)
 {
-	int button_pressed = 0;
-	int recovery_mode = 0;
-
-	recovery_mode = recovery_check_and_clean_flag();
-
-	/* Check Recovery Combo Button press or not. */
-	imx_iomux_v3_setup_multiple_pads(recovery_key_pads,
-		ARRAY_SIZE(recovery_key_pads));
-
-	gpio_direction_input(GPIO_VOL_DN_KEY);
-
-	if (gpio_get_value(GPIO_VOL_DN_KEY) == 0) { /* VOL_DN key is low assert */
-		button_pressed = 1;
-		printf("Recovery key pressed\n");
-	}
-
-	return recovery_mode || button_pressed;
+	imx_iomux_v3_setup_multiple_pads(ddr_type_detection_pads, ARRAY_SIZE(ddr_type_detection_pads));
 }
 
-void board_recovery_setup(void)
+static void ddr3_512mb_init(void)
 {
-	int bootdev = get_boot_device();
+	writel(0x00000002, 0x30391000);
+	writel(0x01040001, 0x307a0000);
+	writel(0x00400046, 0x307a0064);
+	writel(0x00000001, 0x307a0490);
+	writel(0x00020083, 0x307a00d0);
+	writel(0x00690000, 0x307a00d4);
+	writel(0x09300004, 0x307a00dc);
+	writel(0x04080000, 0x307a00e0);
+	writel(0x00100004, 0x307a00e4);
+	writel(0x0000033f, 0x307a00f4);
+	writel(0x09081109, 0x307a0100);
+	writel(0x0007020D, 0x307a0104);
+	writel(0x03040407, 0x307a0108);
+	writel(0x00002006, 0x307a010c);
+	writel(0x04020205, 0x307a0110);
+	writel(0x03030202, 0x307a0114);
+	writel(0x00000803, 0x307a0120);
+	writel(0x00800020, 0x307a0180);
+	writel(0x02098204, 0x307a0190);
+	writel(0x00030303, 0x307a0194);
+	writel(0x80400003, 0x307a01a0);
+	writel(0x00100020, 0x307a01a4);
+	writel(0x80100004, 0x307a01a8);
+	writel(0x00000015, 0x307a0200);
+	writel(0x00161616, 0x307a0204);
+	writel(0x00000F0F, 0x307A0210);
+	writel(0x04040404, 0x307a0214);
+	writel(0x0F0F0404, 0x307a0218);
+	writel(0x06000604, 0x307a0240);
+	writel(0x00000001, 0x307a0244);
+	writel(0x00000000, 0x30391000);
+	writel(0x17420f40, 0x30790000);
+	writel(0x10210100, 0x30790004);
+	writel(0x00060807, 0x30790010);
+	writel(0x1010007e, 0x307900b0);
+	writel(0x00000d6e, 0x3079009c);
+	writel(0x08080808, 0x30790020);
+	writel(0x08080808, 0x30790030);
+	writel(0x01000010, 0x30790050);
+	writel(0x00000010, 0x30790050);
+	writel(0x0e407304, 0x307900c0);
+	writel(0x0e447304, 0x307900c0);
+	writel(0x0e447306, 0x307900c0);
 
-	switch (bootdev) {
-#if defined(CONFIG_FASTBOOT_STORAGE_MMC)
-	case SD1_BOOT:
-	case MMC1_BOOT:
-		if (!getenv("bootcmd_android_recovery"))
-			setenv("bootcmd_android_recovery", "boota mmc0 recovery");
-		break;
-	case SD3_BOOT:
-	case MMC3_BOOT:
-		if (!getenv("bootcmd_android_recovery"))
-			setenv("bootcmd_android_recovery", "boota mmc1 recovery");
-		break;
-#endif /*CONFIG_FASTBOOT_STORAGE_MMC*/
-	default:
-		printf("Unsupported bootup device for recovery: dev: %d\n",
-			bootdev);
-		return;
-	}
+	while ((readl(0x307900c4) & 0x1) != 0x1);
 
-	printf("setup env for recovery..\n");
-	setenv("bootcmd", "run bootcmd_android_recovery");
+	writel(0x0e447304, 0x307900c0);
+	writel(0x0e407304, 0x307900c0);
+
+	writel(0x00000000, 0x30384130);
+	writel(0x00000178, 0x30340020);
+	writel(0x00000002, 0x30384130);
+	writel(0x0000000f, 0x30790018);
+
+	while ((readl(0x307a0004) & 0x1) != 0x1);
 }
-#endif /*CONFIG_ANDROID_RECOVERY*/
 
-#endif /*CONFIG_FSL_FASTBOOT*/
+static void ddr3_1gb_init(void)
+{
+	writel(0x00000002, 0x30391000);
+	writel(0x01040001, 0x307a0000);
+	writel(0x80400003, 0x307a01a0);
+	writel(0x00100020, 0x307a01a4);
+	writel(0x80100004, 0x307a01a8);
+	writel(0x00400046, 0x307a0064);
+	writel(0x00000001, 0x307a0490);
+	writel(0x00020083, 0x307a00d0);
+	writel(0x00690000, 0x307a00d4);
+	writel(0x09300004, 0x307a00dc);
+	writel(0x04080000, 0x307a00e0);
+	writel(0x00100004, 0x307a00e4);
+	writel(0x0000033f, 0x307a00f4);
+	writel(0x09081109, 0x307a0100);
+	writel(0x0007020d, 0x307a0104);
+	writel(0x03040407, 0x307a0108);
+	writel(0x00002006, 0x307a010c);
+	writel(0x04020205, 0x307a0110);
+	writel(0x03030202, 0x307a0114);
+	writel(0x00000803, 0x307a0120);
+	writel(0x00800020, 0x307a0180);
+	writel(0x02000100, 0x307a0184);
+	writel(0x02098204, 0x307a0190);
+	writel(0x00030303, 0x307a0194);
+	writel(0x00000016, 0x307a0200);
+	writel(0x00171717, 0x307a0204);
+	writel(0x04040404, 0x307a0214);
+	writel(0x0f040404, 0x307a0218);
+	writel(0x06000604, 0x307a0240);
+	writel(0x00000001, 0x307a0244);
+	writel(0x00000000, 0x30391000);
+	writel(0x17420f40, 0x30790000);
+	writel(0x10210100, 0x30790004);
+	writel(0x00060807, 0x30790010);
+	writel(0x1010007e, 0x307900b0);
+	writel(0x00000d6e, 0x3079009c);
+	writel(0x08080808, 0x30790020);
+	writel(0x08080808, 0x30790030);
+	writel(0x01000010, 0x30790050);
+	writel(0x00000010, 0x30790050);
+
+	writel(0x0e407304, 0x307900c0);
+	writel(0x0e447304, 0x307900c0);
+	writel(0x0e447306, 0x307900c0);
+
+	while ((readl(0x307900c4) & 0x1) != 0x1);
+
+	writel(0x0e447304, 0x307900c0);
+	writel(0x0e407304, 0x307900c0);
+
+	writel(0x00000000, 0x30384130);
+	writel(0x00000178, 0x30340020);
+	writel(0x00000002, 0x30384130);
+	writel(0x0000000f, 0x30790018);
+
+	while ((readl(0x307a0004) & 0x1) != 0x1);
+}
+
+static void spl_dram_init(void)
+{
+	setup_iomux_ddr_type_detection();
+	gpio_direction_input(DDR_TYPE_DET);
+
+	 if (gpio_get_value(DDR_TYPE_DET)) {
+		ddr3_512mb_init();
+
+	} else {
+		ddr3_1gb_init();
+	}
+}
+
+static void gpr_init(void)
+{
+	struct iomuxc_gpr_base_regs *gpr_regs =
+		(struct iomuxc_gpr_base_regs *)IOMUXC_GPR_BASE_ADDR;
+	writel(0x4F400005, &gpr_regs->gpr[1]);
+}
+
+void board_init_f(ulong dummy)
+{
+	/* setup AIPS and disable watchdog */
+	arch_cpu_init();
+
+	gpr_init();
+
+	/* iomux */
+	board_early_init_f();
+
+	/* setup GP timer */
+	timer_init();
+
+	/* UART clocks enabled and gd valid - init serial console */
+	preloader_console_init();
+
+	/* DDR initialization */
+	spl_dram_init();
+
+	/* Clear the BSS. */
+	memset(__bss_start, 0, __bss_end - __bss_start);
+
+	/* load/boot image from boot device */
+	board_init_r(NULL, 0);
+}
+
+#endif
+
 
