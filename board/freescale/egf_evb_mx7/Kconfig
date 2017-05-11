@@ -1,0 +1,12 @@
+if TARGET_EGF_EVB_MX7
+
+config SYS_BOARD
+	default "egf_evb_mx7"
+
+config SYS_VENDOR
+	default "freescale"
+
+config SYS_CONFIG_NAME
+	default "egf_evb_mx7"
+
+endif
