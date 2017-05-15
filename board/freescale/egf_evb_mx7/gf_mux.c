@@ -1,0 +1,233 @@
+#include "gf_mux.h"
+
+#include <common.h>
+#include <i2c.h>
+#include <asm/io.h>
+#include <asm/gpio.h>
+#include <asm/arch/mx7-pins.h>
+#include <asm/arch/crm_regs.h>
+#include <asm/arch/sys_proto.h>
+#include <asm/imx-common/boot_mode.h>
+#include <asm/imx-common/iomux-v3.h>
+#include <asm/imx-common/mxc_i2c.h>
+#include <asm/arch/imx-regs.h>
+
+#define UART_PAD_CTRL  (PAD_CTL_DSE_3P3V_49OHM | \
+	PAD_CTL_PUS_PU100KOHM | PAD_CTL_HYS)
+
+#define I2C_PAD_CTRL    (PAD_CTL_DSE_3P3V_32OHM | PAD_CTL_SRE_SLOW | \
+	PAD_CTL_HYS | PAD_CTL_PUE | PAD_CTL_PUS_PU100KOHM)
+
+#define LCD_PAD_CTRL    (PAD_CTL_HYS | PAD_CTL_PUS_PU100KOHM | \
+	PAD_CTL_DSE_3P3V_49OHM)
+
+#define DIO_PDOWN_PAD_CTRL (PAD_CTL_HYS | PAD_CTL_PUS_PD100KOHM | \
+	PAD_CTL_DSE_3P3V_49OHM)
+
+#define DIO_PUP_PAD_CTRL (PAD_CTL_HYS | PAD_CTL_PUS_PU47KOHM | \
+	PAD_CTL_DSE_3P3V_49OHM)
+
+#define USDHC_PAD_CTRL (PAD_CTL_DSE_3P3V_32OHM | PAD_CTL_SRE_SLOW | \
+	PAD_CTL_HYS | PAD_CTL_PUE | PAD_CTL_PUS_PU47KOHM)
+
+/* UART1 */
+static iomux_v3_cfg_t const uart1_pads[] = {
+	MX7D_PAD_UART1_TX_DATA__UART1_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX7D_PAD_UART1_RX_DATA__UART1_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
+};
+
+/* UART2 */
+static iomux_v3_cfg_t const uart2_pads[] = {
+	MX7D_PAD_UART2_TX_DATA__UART2_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX7D_PAD_UART2_RX_DATA__UART2_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX7D_PAD_SAI2_RX_DATA__UART2_DCE_CTS | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX7D_PAD_SAI2_TX_DATA__UART2_DCE_RTS | MUX_PAD_CTRL(UART_PAD_CTRL),
+};
+
+/* UART5 */
+static iomux_v3_cfg_t const uart5_pads[] = {
+	MX7D_PAD_I2C4_SCL__UART5_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX7D_PAD_I2C4_SDA__UART5_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX7D_PAD_GPIO1_IO04__UART5_CTS_B | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX7D_PAD_GPIO1_IO05__UART5_RTS_B | MUX_PAD_CTRL(UART_PAD_CTRL),
+};
+
+/* UART7 */
+static iomux_v3_cfg_t const uart7_pads[] = {
+	MX7D_PAD_EPDC_DATA13__UART7_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX7D_PAD_EPDC_DATA12__UART7_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
+};
+
+/* I2C1 for PMIC and EEPROM */
+static struct i2c_pads_info i2c_pad_info1 = {
+	.scl = {
+		.i2c_mode =  MX7D_PAD_I2C1_SCL__I2C1_SCL 	| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX7D_PAD_I2C1_SCL__GPIO4_IO8 	| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(4, 8),
+	},
+	.sda = {
+		.i2c_mode = MX7D_PAD_I2C1_SDA__I2C1_SDA 	| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX7D_PAD_I2C1_SDA__GPIO4_IO9 	| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(4, 9),
+	},
+};
+
+/* I2C3 */
+static struct i2c_pads_info i2c_pad_info3 = {
+	.scl = {
+		.i2c_mode =  MX7D_PAD_I2C3_SCL__I2C3_SCL 		| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX7D_PAD_I2C3_SCL__GPIO4_IO12 		| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(4, 12),
+	},
+	.sda = {
+		.i2c_mode = MX7D_PAD_I2C3_SDA__I2C3_SDA 	| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX7D_PAD_I2C3_SDA__GPIO4_IO13 	| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(4, 13),
+	},
+};
+
+/* LCD RGB interface */
+static iomux_v3_cfg_t const lcd_pads[] = {
+	MX7D_PAD_LCD_CLK__LCD_CLK 			| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_ENABLE__LCD_ENABLE 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_HSYNC__LCD_HSYNC 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_VSYNC__LCD_VSYNC 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA00__LCD_DATA0 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA01__LCD_DATA1 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA02__LCD_DATA2 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA03__LCD_DATA3 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA04__LCD_DATA4 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA05__LCD_DATA5 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA06__LCD_DATA6 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA07__LCD_DATA7 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA08__LCD_DATA8 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA09__LCD_DATA9 		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA10__LCD_DATA10 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA11__LCD_DATA11		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA12__LCD_DATA12		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA13__LCD_DATA13 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA14__LCD_DATA14 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA15__LCD_DATA15 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA16__LCD_DATA16 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA17__LCD_DATA17 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA18__LCD_DATA18 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA19__LCD_DATA19 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA20__LCD_DATA20 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA21__LCD_DATA21 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA22__LCD_DATA22 	| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_DATA23__LCD_DATA23		| MUX_PAD_CTRL(LCD_PAD_CTRL),
+	MX7D_PAD_LCD_RESET__GPIO3_IO4		| MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL), // DISPLAY-EN-3V3 - GPIO3-IO04
+};
+
+static iomux_v3_cfg_t const sd1_pads[] = {
+	MX7D_PAD_SD1_CLK__SD1_CLK 		| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_CMD__SD1_CMD 		| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_DATA0__SD1_DATA0 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_DATA1__SD1_DATA1 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_DATA2__SD1_DATA2 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_DATA3__SD1_DATA3 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_RESET_B__GPIO5_IO2	| MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL) , // LED_WIFI_LINK
+};
+
+static iomux_v3_cfg_t const sd2_pads[] = {
+	MX7D_PAD_SD2_CLK__SD2_CLK 		| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD2_CMD__SD2_CMD 		| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD2_DATA0__SD2_DATA0 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD2_DATA1__SD2_DATA1 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD2_DATA2__SD2_DATA2 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD2_DATA3__SD2_DATA3 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD2_CD_B__SD2_CD_B		| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const sd3_pads[] = {
+	MX7D_PAD_SD3_CLK__SD3_CLK 		| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD3_CMD__SD3_CMD 		| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD3_DATA0__SD3_DATA0 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD3_DATA1__SD3_DATA1 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD3_DATA2__SD3_DATA2 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD3_DATA3__SD3_DATA3 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD3_DATA4__SD3_DATA4 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD3_DATA5__SD3_DATA5 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD3_DATA6__SD3_DATA6 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD3_DATA7__SD3_DATA7 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD3_STROBE__SD3_STROBE	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD3_RESET_B__SD3_RESET_B	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const eeprom_pads[] = {
+	MX7D_PAD_SD1_WP__GPIO5_IO1	| MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL),
+};
+
+static void my_uart_init_mux(void)
+{
+	imx_iomux_v3_setup_multiple_pads(uart1_pads, ARRAY_SIZE(uart1_pads));
+	imx_iomux_v3_setup_multiple_pads(uart2_pads, ARRAY_SIZE(uart2_pads));
+	imx_iomux_v3_setup_multiple_pads(uart5_pads, ARRAY_SIZE(uart5_pads));
+	imx_iomux_v3_setup_multiple_pads(uart7_pads, ARRAY_SIZE(uart7_pads));
+}
+
+static void my_i2c_init_mux(void)
+{
+	setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
+	setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info3);
+}
+
+static void my_lcd_init_mux(void)
+{
+	imx_iomux_v3_setup_multiple_pads(lcd_pads, ARRAY_SIZE(lcd_pads));
+}
+
+static void my_sdio_init_mux(void)
+{
+	imx_iomux_v3_setup_multiple_pads(sd1_pads, ARRAY_SIZE(sd1_pads));
+	imx_iomux_v3_setup_multiple_pads(sd2_pads, ARRAY_SIZE(sd2_pads));
+	imx_iomux_v3_setup_multiple_pads(sd3_pads, ARRAY_SIZE(sd3_pads));
+}
+
+static void my_eeprom_init_mux(void)
+{
+	imx_iomux_v3_setup_multiple_pads(eeprom_pads, ARRAY_SIZE(eeprom_pads));
+}
+
+void egf_board_mux_init(int mode)
+{
+	switch(mode){
+	case PROGRAMMER_MUX_MODE:
+		my_uart_init_mux();
+		my_i2c_init_mux();
+//		my_ecspi_init_mux();
+//		my_spinor_init_mux();
+//		my_nand_init_mux();
+		my_lcd_init_mux();
+		my_sdio_init_mux();
+//		my_fec1_init_mux();
+		my_eeprom_init_mux();
+		break;
+	case APPLICATION_MUX_MODE:
+		my_uart_init_mux();
+		my_i2c_init_mux();
+//		my_ecspi_init_mux();
+//		my_can_init_mux();
+//		my_gpio_init_mux();
+//		my_spinor_init_mux();
+//		my_nand_init_mux();
+		my_lcd_init_mux();
+//		my_fec1_init_mux();
+//		my_usb_init_mux();
+		my_sdio_init_mux();
+//		my_adc_init_mux();
+//		my_buzzer_init_mux();
+		my_eeprom_init_mux();
+//		my_touchscreen_init_mux();
+//		my_audio_init_mux();
+		break;
+	default:
+		//printf("MUX MODE NOT DEFINED!!!!!!!!!!!!\n");
+		break;
+	}
+}
+
+
+
+
+
