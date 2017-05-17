@@ -265,10 +265,10 @@
 	CONFIG_DFU_ENV_SETTINGS \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
-	"console=ttymxc0\0" \
+	"console=ttymxc1\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=imx7d-sdb.dtb\0" \
+	"fdt_file=imx7-egf-WID0547_AA01.01.dtb\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
@@ -323,20 +323,29 @@
 			"fi; " \
 		"else " \
 			"bootz; " \
-		"fi;\0"
-
-#define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev};" \
-	   "mmc dev ${mmcdev}; if mmc rescan; then " \
-		   "if run loadbootscript; then " \
-			   "run bootscript; " \
-		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else run netboot; " \
-			   "fi; " \
-		   "fi; " \
-	   "else run netboot; fi"
+		"fi;\0" \
+	"sdargs=setenv bootargs console=${console},${baudrate} panel=${panel}\0" \
+	"loadimage_sd=fatload mmc 0:1 ${loadaddr} ${image}\0" \
+	"loadfdt_sd=fatload mmc 0:1 ${fdt_addr} ${fdt_file}\0" \
+	"sdboot=echo Try Booting from SD...; " \
+		"echo ${sdargs}; " \
+		"mmc rescan; " \
+		"if run loadfdt_sd; then " \
+			"if run loadimage_sd; then " \
+				"if test -e mmc 0:1 update.bin; then " \
+					"echo Loading update from SDCard; " \
+				"else " \
+					"echo Booting from SD Card;" \
+					"setenv sdargs ${sdargs} root=/dev/mmcblk1p2 rootwait rw; " \
+					"echo ${sdargs}; " \
+				"fi; " \
+				"run sdargs; " \
+				"echo ${bootargs}; " \
+				"bootz ${loadaddr} - ${fdt_addr}; " \
+			"fi; " \
+		"fi;\0 " \
+	"bootcmd=echo Booting...; " \
+	"run sdboot;\0"
 #endif
 
 #define CONFIG_CMD_MEMTEST
