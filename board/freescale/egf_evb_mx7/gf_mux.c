@@ -30,6 +30,10 @@
 #define USDHC_PAD_CTRL (PAD_CTL_DSE_3P3V_32OHM | PAD_CTL_SRE_SLOW | \
 	PAD_CTL_HYS | PAD_CTL_PUE | PAD_CTL_PUS_PU47KOHM)
 
+
+#define AUDIO_PAD_CTRL (PAD_CTL_PUS_PD100KOHM | 	\
+	PAD_CTL_DSE_3P3V_49OHM | PAD_CTL_SRE_SLOW | PAD_CTL_HYS)
+
 /* UART1 */
 static iomux_v3_cfg_t const uart1_pads[] = {
 	MX7D_PAD_UART1_TX_DATA__UART1_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
@@ -138,7 +142,7 @@ static iomux_v3_cfg_t const sd2_pads[] = {
 	MX7D_PAD_SD2_DATA1__SD2_DATA1 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX7D_PAD_SD2_DATA2__SD2_DATA2 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX7D_PAD_SD2_DATA3__SD2_DATA3 	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX7D_PAD_SD2_CD_B__SD2_CD_B		| MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD2_CD_B__GPIO5_IO9	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
 };
 
 static iomux_v3_cfg_t const sd3_pads[] = {
@@ -159,6 +163,19 @@ static iomux_v3_cfg_t const sd3_pads[] = {
 static iomux_v3_cfg_t const eeprom_pads[] = {
 	MX7D_PAD_SD1_WP__GPIO5_IO1	| MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL),
 };
+
+static iomux_v3_cfg_t const audio_pads[] = {
+	MX7D_PAD_SAI1_RX_DATA__SAI1_RX_DATA0 | MUX_PAD_CTRL(AUDIO_PAD_CTRL),
+	MX7D_PAD_SAI1_TX_DATA__SAI1_TX_DATA0 | MUX_PAD_CTRL(AUDIO_PAD_CTRL),
+	MX7D_PAD_SAI1_TX_SYNC__SAI1_TX_SYNC | MUX_PAD_CTRL(AUDIO_PAD_CTRL),
+	MX7D_PAD_SAI1_TX_BCLK__SAI1_TX_BCLK | MUX_PAD_CTRL(AUDIO_PAD_CTRL),
+	MX7D_PAD_SAI1_MCLK__SAI1_MCLK | MUX_PAD_CTRL(AUDIO_PAD_CTRL),
+};
+
+static void my_audio_init_mux(void)
+{
+	imx_iomux_v3_setup_multiple_pads(audio_pads, ARRAY_SIZE(audio_pads));
+}
 
 static void my_uart_init_mux(void)
 {
@@ -221,7 +238,7 @@ void egf_board_mux_init(int mode)
 //		my_buzzer_init_mux();
 		my_eeprom_init_mux();
 //		my_touchscreen_init_mux();
-//		my_audio_init_mux();
+		my_audio_init_mux();
 		break;
 	default:
 		//printf("MUX MODE NOT DEFINED!!!!!!!!!!!!\n");
