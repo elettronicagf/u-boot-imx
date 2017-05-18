@@ -8,6 +8,7 @@
 #define DISP_BL_CONTROL_PWM_GPIO IMX_GPIO_NR(1,2)
 #define DISP_EN_GPIO IMX_GPIO_NR(3,4)
 #define DISP_VDD_EN_GPIO IMX_GPIO_NR(2,4)
+#define ENET_NRST_GPIO IMX_GPIO_NR(7,14)
 
 void egf_board_mux_init(int mode);
 #endif

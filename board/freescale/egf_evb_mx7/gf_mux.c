@@ -30,9 +30,14 @@
 #define USDHC_PAD_CTRL (PAD_CTL_DSE_3P3V_32OHM | PAD_CTL_SRE_SLOW | \
 	PAD_CTL_HYS | PAD_CTL_PUE | PAD_CTL_PUS_PU47KOHM)
 
-
 #define AUDIO_PAD_CTRL (PAD_CTL_PUS_PD100KOHM | 	\
 	PAD_CTL_DSE_3P3V_49OHM | PAD_CTL_SRE_SLOW | PAD_CTL_HYS)
+
+#define ENET_PAD_CTRL  (PAD_CTL_PUS_PU100KOHM | PAD_CTL_DSE_3P3V_49OHM)
+
+#define ENET_RX_PAD_CTRL  (PAD_CTL_PUS_PU100KOHM | PAD_CTL_DSE_3P3V_49OHM)
+
+#define ENET_PAD_CTRL_MII  (PAD_CTL_DSE_3P3V_32OHM)
 
 /* UART1 */
 static iomux_v3_cfg_t const uart1_pads[] = {
@@ -172,6 +177,27 @@ static iomux_v3_cfg_t const audio_pads[] = {
 	MX7D_PAD_SAI1_MCLK__SAI1_MCLK | MUX_PAD_CTRL(AUDIO_PAD_CTRL),
 };
 
+static iomux_v3_cfg_t const enet_pads[] = {
+	MX7D_PAD_EPDC_BDR0__CCM_ENET_REF_CLK2 | MUX_PAD_CTRL(ENET_PAD_CTRL) | MUX_MODE_SION,
+	MX7D_PAD_EPDC_SDCE0__ENET2_RGMII_RX_CTL | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
+	MX7D_PAD_EPDC_SDCE1__ENET2_RX_ER | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
+	MX7D_PAD_EPDC_SDCE2__ENET2_RGMII_TD0 | MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX7D_PAD_EPDC_SDCE3__ENET2_RGMII_TD1 | MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX7D_PAD_EPDC_SDCLK__ENET2_RGMII_RD0 | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
+	MX7D_PAD_EPDC_SDLE__ENET2_RGMII_RD1 | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
+	MX7D_PAD_EPDC_GDRL__ENET2_RGMII_TX_CTL | MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX7D_PAD_GPIO1_IO14__ENET2_MDIO | MUX_PAD_CTRL(ENET_PAD_CTRL_MII),
+	MX7D_PAD_GPIO1_IO15__ENET2_MDC | MUX_PAD_CTRL(ENET_PAD_CTRL_MII),
+	MX7D_PAD_ENET1_CRS__GPIO7_IO14 | MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL),	// ENET_nRST
+	MX7D_PAD_ENET1_COL__GPIO7_IO15 | MUX_PAD_CTRL(DIO_PUP_PAD_CTRL),  // ENET_nINT
+
+};
+
+static void my_enet_init_mux(void)
+{
+	imx_iomux_v3_setup_multiple_pads(enet_pads, ARRAY_SIZE(enet_pads));
+}
+
 static void my_audio_init_mux(void)
 {
 	imx_iomux_v3_setup_multiple_pads(audio_pads, ARRAY_SIZE(audio_pads));
@@ -219,7 +245,7 @@ void egf_board_mux_init(int mode)
 //		my_nand_init_mux();
 		my_lcd_init_mux();
 		my_sdio_init_mux();
-//		my_fec1_init_mux();
+		my_enet_init_mux();
 		my_eeprom_init_mux();
 		break;
 	case APPLICATION_MUX_MODE:
@@ -231,7 +257,7 @@ void egf_board_mux_init(int mode)
 //		my_spinor_init_mux();
 //		my_nand_init_mux();
 		my_lcd_init_mux();
-//		my_fec1_init_mux();
+		my_enet_init_mux();
 //		my_usb_init_mux();
 		my_sdio_init_mux();
 //		my_adc_init_mux();

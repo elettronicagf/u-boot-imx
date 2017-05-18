@@ -281,8 +281,13 @@ int board_mmc_init(bd_t *bis)
 int board_eth_init(bd_t *bis)
 {
 	int ret;
+	/* Reset LAN8720 PHY */
+	gpio_direction_output(ENET_NRST_GPIO,0);
+	udelay (1000);
+	gpio_set_value(ENET_NRST_GPIO, 1);
+	udelay (500);
 
-	ret = fecmxc_initialize_multi(bis, CONFIG_FEC_ENET_DEV,
+	ret = fecmxc_initialize_multi(bis, 1,
 		CONFIG_FEC_MXC_PHYADDR, IMX_FEC_BASE);
 	if (ret)
 		printf("FEC1 MXC: %s:failed\n", __func__);
@@ -290,36 +295,25 @@ int board_eth_init(bd_t *bis)
 	return ret;
 }
 
-static int setup_fec(int fec_id)
+static int setup_fec(void)
 {
 	struct iomuxc_gpr_base_regs *const iomuxc_gpr_regs
 		= (struct iomuxc_gpr_base_regs *) IOMUXC_GPR_BASE_ADDR;
 
-	if (0 == fec_id) {
-		/* Use 125M anatop REF_CLK1 for ENET1, clear gpr1[13], gpr1[17]*/
-		clrsetbits_le32(&iomuxc_gpr_regs->gpr[1],
-			(IOMUXC_GPR_GPR1_GPR_ENET1_TX_CLK_SEL_MASK |
-			 IOMUXC_GPR_GPR1_GPR_ENET1_CLK_DIR_MASK), 0);
-	} else {
-		/* Use 125M anatop REF_CLK2 for ENET2, clear gpr1[14], gpr1[18]*/
-		clrsetbits_le32(&iomuxc_gpr_regs->gpr[1],
-			(IOMUXC_GPR_GPR1_GPR_ENET2_TX_CLK_SEL_MASK |
-			 IOMUXC_GPR_GPR1_GPR_ENET2_CLK_DIR_MASK), 0);
-	}
+	/* Use 50M anatop REF_CLK2 for ENET2, clear gpr1[14], set gpr1[18]
+	 * enable on the pin
+	 */
+	clrsetbits_le32(&iomuxc_gpr_regs->gpr[1],
+					IOMUXC_GPR_GPR1_GPR_ENET2_TX_CLK_SEL_MASK,
+					IOMUXC_GPR_GPR1_GPR_ENET2_CLK_DIR_MASK);
 
-	return set_clk_enet(ENET_125MHz);
+	return set_clk_enet(ENET_50MHz);
 
 }
 
 
 int board_phy_config(struct phy_device *phydev)
 {
-	/* enable rgmii rxc skew and phy mode select to RGMII copper */
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x21);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1f, 0x7ea8);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x2f);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1f, 0x71b7);
-
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
 	return 0;
@@ -573,7 +567,7 @@ int board_init(void)
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
 #ifdef CONFIG_FEC_MXC
-	setup_fec(CONFIG_FEC_ENET_DEV);
+	setup_fec();
 #endif
 
 #ifdef CONFIG_NAND_MXS
