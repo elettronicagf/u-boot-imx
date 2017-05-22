@@ -41,6 +41,14 @@
 
 #define SPI_PAD_CTRL (PAD_CTL_HYS | PAD_CTL_DSE_3P3V_49OHM)
 
+#define KPP_ROW_PAD_CTRL (PAD_CTL_PUS_PU100KOHM |	\
+	PAD_CTL_DSE_3P3V_98OHM | 						\
+	PAD_CTL_SRE_SLOW  | PAD_CTL_HYS )
+
+#define KPP_COL_PAD_CTRL (PAD_CTL_DSE_3P3V_32OHM |	\
+	PAD_CTL_SRE_SLOW  | PAD_CTL_HYS)
+
+
 /* UART1 */
 static iomux_v3_cfg_t const uart1_pads[] = {
 	MX7D_PAD_UART1_TX_DATA__UART1_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
@@ -226,6 +234,47 @@ static iomux_v3_cfg_t const usb_hub_pads[] = {
 	MX7D_PAD_SD1_CD_B__GPIO5_IO0 | MUX_PAD_CTRL(DIO_PUP_PAD_CTRL), // USB-HUB-nINT
 };
 
+static iomux_v3_cfg_t const usb_otg_pads[] = {
+	MX7D_PAD_UART3_TX_DATA__USB_OTG1_PWR | MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL), // USB_OTG1_PWR
+	MX7D_PAD_UART3_RX_DATA__USB_OTG1_OC	| MUX_PAD_CTRL(DIO_PUP_PAD_CTRL), // USB_OTG1_nOC
+};
+
+static iomux_v3_cfg_t const can_pads[] = {
+	MX7D_PAD_ENET1_RGMII_TD3__FLEXCAN2_TX | MUX_MODE_SION,
+	MX7D_PAD_ENET1_RGMII_TD2__FLEXCAN2_RX | MUX_MODE_SION,
+	MX7D_PAD_GPIO1_IO13__FLEXCAN1_TX | MUX_MODE_SION,
+	MX7D_PAD_GPIO1_IO12__FLEXCAN1_RX | MUX_MODE_SION,
+};
+
+static iomux_v3_cfg_t const kpp_pads[] = {
+	MX7D_PAD_ENET1_RGMII_TD0__KPP_ROW0 | MUX_PAD_CTRL(KPP_ROW_PAD_CTRL),
+	MX7D_PAD_ENET1_RGMII_TD1__KPP_COL0 | MUX_PAD_CTRL(KPP_COL_PAD_CTRL),
+	MX7D_PAD_ENET1_RGMII_RX_CTL__KPP_ROW1 | MUX_PAD_CTRL(KPP_ROW_PAD_CTRL),
+	MX7D_PAD_ENET1_RGMII_RXC__KPP_COL1 | MUX_PAD_CTRL(KPP_COL_PAD_CTRL),
+	MX7D_PAD_ENET1_RGMII_RD2__KPP_ROW2 | MUX_PAD_CTRL(KPP_ROW_PAD_CTRL),
+	MX7D_PAD_ENET1_RGMII_RD3__KPP_COL2 | MUX_PAD_CTRL(KPP_COL_PAD_CTRL),
+	MX7D_PAD_ENET1_RGMII_RD0__KPP_ROW3 | MUX_PAD_CTRL(KPP_ROW_PAD_CTRL),
+	MX7D_PAD_ENET1_RGMII_RD1__KPP_COL3 | MUX_PAD_CTRL(KPP_COL_PAD_CTRL),
+	MX7D_PAD_GPIO1_IO06__KPP_ROW4 | MUX_PAD_CTRL(KPP_ROW_PAD_CTRL),
+	MX7D_PAD_GPIO1_IO07__KPP_COL4 | MUX_PAD_CTRL(KPP_COL_PAD_CTRL),
+	MX7D_PAD_EPDC_SDSHR__KPP_ROW5 | MUX_PAD_CTRL(KPP_ROW_PAD_CTRL),
+	MX7D_PAD_EPDC_SDOE__KPP_COL5 | MUX_PAD_CTRL(KPP_COL_PAD_CTRL),
+	MX7D_PAD_GPIO1_IO11__KPP_ROW6 | MUX_PAD_CTRL(KPP_ROW_PAD_CTRL),
+	MX7D_PAD_GPIO1_IO10__KPP_COL6 | MUX_PAD_CTRL(KPP_COL_PAD_CTRL),
+	MX7D_PAD_EPDC_GDOE__KPP_ROW7 | MUX_PAD_CTRL(KPP_ROW_PAD_CTRL),
+	MX7D_PAD_EPDC_GDCLK__KPP_COL7 | MUX_PAD_CTRL(KPP_COL_PAD_CTRL),
+};
+
+static void my_kpp_init_mux(void)
+{
+	imx_iomux_v3_setup_multiple_pads(kpp_pads, ARRAY_SIZE(kpp_pads));
+}
+
+static void my_can_init_mux(void)
+{
+	imx_iomux_v3_setup_multiple_pads(can_pads, ARRAY_SIZE(can_pads));
+}
+
 static void my_usb_hub_init_mux(void)
 {
 	imx_iomux_v3_setup_multiple_pads(usb_hub_pads, ARRAY_SIZE(usb_hub_pads));
@@ -233,6 +282,11 @@ static void my_usb_hub_init_mux(void)
 	gpio_direction_output(IMX_GPIO_NR(6,17),1);
 	gpio_direction_output(IMX_GPIO_NR(2,8),1);
 	gpio_direction_output(IMX_GPIO_NR(2,9),1);
+}
+
+static void my_usb_otg_init_mux(void)
+{
+	imx_iomux_v3_setup_multiple_pads(usb_otg_pads, ARRAY_SIZE(usb_otg_pads));
 }
 
 static void my_ecspi_init_mux(void)
@@ -299,17 +353,17 @@ void egf_board_mux_init(int mode)
 		my_i2c_init_mux();
 		my_ecspi_init_mux();
 //		my_spinor_init_mux();
-//		my_nand_init_mux();
 		my_lcd_init_mux();
 		my_sdio_init_mux();
 		my_enet_init_mux();
 		my_eeprom_init_mux();
+		my_usb_otg_init_mux();
 		break;
 	case APPLICATION_MUX_MODE:
 		my_uart_init_mux();
 		my_i2c_init_mux();
 		my_ecspi_init_mux();
-//		my_can_init_mux();
+		my_can_init_mux();
 		my_gpio_init_mux();
 //		my_spinor_init_mux();
 		my_lcd_init_mux();
@@ -322,6 +376,8 @@ void egf_board_mux_init(int mode)
 		my_touch_init_mux();
 		my_audio_init_mux();
 		my_usb_hub_init_mux();
+		my_usb_otg_init_mux();
+		my_kpp_init_mux();
 		break;
 	default:
 		//printf("MUX MODE NOT DEFINED!!!!!!!!!!!!\n");
