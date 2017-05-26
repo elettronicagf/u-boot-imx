@@ -317,6 +317,19 @@ static int do_spi_flash_read_write(int argc, char * const argv[])
 	return ret == 0 ? 0 : 1;
 }
 
+static int do_spi_flash_lock_unlock(int argc, char * const argv[])
+{
+	int ret = 1;
+
+	if (strcmp(argv[0], "lock") == 0) {
+		ret = spi_flash_lock_enable(flash, 1);
+	} else if (strcmp(argv[0], "unlock") == 0) {
+		ret = spi_flash_lock_enable(flash, 0);
+	}
+
+	return ret == 0 ? 0 : 1;
+}
+
 static int do_spi_flash_erase(int argc, char * const argv[])
 {
 	int ret;
@@ -574,6 +587,8 @@ static int do_spi_flash(cmd_tbl_t *cmdtp, int flag, int argc,
 		ret = do_spi_flash_erase(argc, argv);
 	else if (strcmp(cmd, "protect") == 0)
 		ret = do_spi_protect(argc, argv);
+	else if (strcmp(cmd, "lock") == 0 || strcmp(cmd, "unlock") == 0)
+		ret = do_spi_flash_lock_unlock(argc, argv);
 #ifdef CONFIG_CMD_SF_TEST
 	else if (!strcmp(cmd, "test"))
 		ret = do_spi_flash_test(argc, argv);

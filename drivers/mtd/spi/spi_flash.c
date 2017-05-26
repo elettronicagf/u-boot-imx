@@ -85,6 +85,48 @@ static int write_sr(struct spi_flash *flash, u8 ws)
 	return 0;
 }
 
+#define SRWD	(1<<7)	//SRWD Status Register 1
+#define BP2		(1<<4)
+#define BP1		(1<<3)
+#define BP0		(1<<2)
+/*
+ * Enables/disables lock for all sectors
+ */
+int spi_flash_cmd_lock_enable(struct spi_flash *flash, u8 enabled)
+{
+	int ret;
+	u8 cmd;
+	u8 value;
+	u8 value_new;
+
+	cmd = CMD_READ_STATUS;
+	ret = spi_flash_read_common(flash, &cmd, 1, &value, 1);
+	if (ret < 0) {
+		debug("SF: fail to read status register\n");
+		return ret;
+	}
+	debug("SForig: status=%x\n", value);
+
+	value_new = value;
+
+	if(enabled)
+		value_new |= (SRWD | BP0 | BP1 | BP2);
+	else
+		value_new &= ~(SRWD | BP0 | BP1 | BP2);
+
+	if(value_new!=value) {
+		cmd = CMD_WRITE_STATUS; //WRR command
+		ret = spi_flash_write_common(flash, &cmd, 1, &value_new, 1);
+		if (ret) {
+			debug("SF: fail to write status register\n");
+			return ret;
+		}
+		printf("SF: SR1=%x\n", value_new);
+	}
+
+	return 0;
+}
+
 #if defined(CONFIG_SPI_FLASH_SPANSION) || defined(CONFIG_SPI_FLASH_WINBOND)
 static int read_cr(struct spi_flash *flash, u8 *rc)
 {

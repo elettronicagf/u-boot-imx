@@ -213,6 +213,13 @@ static inline int spi_flash_erase(struct spi_flash *flash, u32 offset,
 {
 	return flash->erase(flash, offset, len);
 }
+
+extern int spi_flash_cmd_lock_enable(struct spi_flash *flash, u8 enabled);
+static inline int spi_flash_lock_enable(struct spi_flash *flash, u8 enable)
+{
+	return spi_flash_cmd_lock_enable(flash, enable);
+}
+
 #endif
 
 static inline int spi_flash_protect(struct spi_flash *flash, u32 ofs, u32 len,
