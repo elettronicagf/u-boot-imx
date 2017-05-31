@@ -145,6 +145,9 @@
 #define CONFIG_MFG_NAND_PARTITION ""
 #endif
 
+#define CONFIG_DISP1_BKL_PWM_GPIO		9
+#define CONFIG_DISP1_BKL_PWR_EN_GPIO	78
+
 #ifdef CONFIG_WID
 #define CONFIG_MFG_ENV_SETTINGS \
 		"g_mass_storage.stall=0 g_mass_storage.removable=1 " \
@@ -169,7 +172,9 @@
 		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 		"sf write ${uboot_img_copy_addr} " __stringify(CONFIG_SYS_SPI_U_BOOT_OFFS) " 0x100000;" \
 		"sf lock;" \
-		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";\0 "
+		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+		"gpio clear " __stringify(CONFIG_DISP1_BKL_PWM_GPIO) ";" \
+		"gpio clear " __stringify(CONFIG_DISP1_BKL_PWR_EN_GPIO) ";\0 "
 #else
 #define CONFIG_MFG_ENV_SETTINGS ""
 #endif
