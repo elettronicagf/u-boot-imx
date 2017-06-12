@@ -159,7 +159,6 @@ int board_mmc_init(bd_t *bis)
 	/*
 	 * According to the board_mmc_init() the following map is done:
 	 * (U-boot device node)    (Physical Port)
-	 * mmc0                    SD1 - microSD
 	 * mmc1                    SD3 - eMMC
 	 */
 	for (i = 0; i < CONFIG_SYS_FSL_USDHC_NUM; i++) {
