@@ -151,6 +151,7 @@
 		"g_mass_storage.file=/fat g_mass_storage.ro=1 " \
 		"g_mass_storage.idVendor=0x066F g_mass_storage.idProduct=0x37FF "\
 		"g_mass_storage.iSerialNumber=\"\" \0" \
+		"panel=EGF_BLC1093\0" \
 		"destroyenv=sf probe; gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 				"sf unlock; sf erase 0x3F0000 0x10000;sf lock;" \
 				"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
@@ -234,6 +235,7 @@
 	CONFIG_MFG_ENV_SETTINGS \
 	"locknor=sf probe;gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";sf lock;gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";\0" \
 	"unlocknor=sf probe;gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";sf unlock; ;\0" \
+	"panel=EGF_BLC1093\0" \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
 	"fdt_addr=0x18000000\0" \
