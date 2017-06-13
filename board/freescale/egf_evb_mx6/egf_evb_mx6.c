@@ -1162,6 +1162,40 @@ static void fix_clocks(void)
 		writel(reg, &ccm_regs->cbcdr);
 		//Wait for busy bits to clear
 		while((readl(&ccm_regs->cdhipr) & 0x3F) != 0);
+
+		//Disable MMDC_CH1 handshake
+		reg = readl(&ccm_regs->ccdr);
+		reg |= (1 << 16);
+		writel(reg, &ccm_regs->ccdr);
+		//Switch periph2_clk2_sel to pll2
+		reg = readl(&ccm_regs->cbcmr);
+		reg |= 1 << 20;
+		writel(reg, &ccm_regs->cbcmr);
+
+		//Switch periph2_clk_sel to periph2_clk2
+		reg = readl(&ccm_regs->cbcdr);
+		reg |= MXC_CCM_CBCDR_PERIPH2_CLK_SEL;
+		writel(reg, &ccm_regs->cbcdr);
+		//Wait till busy bits clear
+		while((readl(&ccm_regs->cdhipr) & 0x3F) != 0);
+
+		//Set pre_periph2_clk_sel to PLL2
+		reg = readl(&ccm_regs->cbcmr);
+		reg &= ~MXC_CCM_CBCMR_PRE_PERIPH2_CLK_SEL_MASK;
+		writel(reg, &ccm_regs->cbcmr);
+		//Set periph2_clk_sel to pll2
+		reg = readl(&ccm_regs->cbcdr);
+		reg &= ~MXC_CCM_CBCDR_PERIPH2_CLK_SEL;
+		writel(reg, &ccm_regs->cbcdr);
+		//Wait for busy bits to clear
+		while((readl(&ccm_regs->cdhipr) & 0x3F) != 0);
+
+		//Enable MMDC_CH1 handshake
+		reg = readl(&ccm_regs->ccdr);
+		reg &= ~(1 << 16);
+		writel(reg, &ccm_regs->ccdr);
+
+
 	}
 }
 
