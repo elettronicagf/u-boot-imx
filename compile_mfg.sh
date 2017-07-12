@@ -1,8 +1,12 @@
-VERSION=$(cat Makefile | grep EXTRAV | grep 0547 | awk -F"-" '{print $2"-"$3}')
+VERSION=$(cat Makefile | grep EXTRAV | grep 0574 | awk -F"-" '{print $2"-"$3}')
 make distclean
-export KCFLAGS=--sysroot=/opt/0533_panel_pc/sdk/toolchain/1.0/sysroots/cortexa9hf-vfp-neon-egf-linux-gnueabi
+export CROSS_COMPILE=/opt/fsl-imx-x11/4.1.15-2.1.0/sysroots/x86_64-pokysdk-linux/usr/bin/arm-poky-linux-gnueabi/arm-poky-linux-gnueabi-
+export KCFLAGS=--sysroot=/opt/fsl-imx-x11/4.1.15-2.1.0/sysroots/cortexa7hf-neon-poky-linux-gnueabi/
 export KCPPFLAGS=
 export KAFLAGS=
-make CROSS_COMPILE=arm-egf-linux-gnueabi- egf_evb_mx7_mfg_wid0547_aa0101_config
-make CROSS_COMPILE=arm-egf-linux-gnueabi- -j8
-cp u-boot.imx binaries/u-boot.imx.wid0547aa0101-$VERSION
+make egf_evb_mx7_mfg_wid0575_aa0101_config
+make -j8
+cp u-boot.imx binaries/u-boot.imx.wid0575aa0101-$VERSION
+make egf_evb_mx7_mfg_wid0575_ab0101_config
+make -j8
+cp u-boot.imx binaries/u-boot.imx.wid0575ab0101-$VERSION

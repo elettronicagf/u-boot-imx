@@ -3,7 +3,7 @@
 
 #include <common.h>
 
-#define SOM_EEPROM_I2C_BUS_NO 0
+#define SOM_EEPROM_I2C_BUS_NO 1
 #define SOM_EEPROM_I2C_ADDRESS 0x50
 #define BOARD_EEPROM_I2C_BUS_NO 0
 #define BOARD_EEPROM_I2C_ADDRESS 0

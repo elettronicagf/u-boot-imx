@@ -27,7 +27,7 @@
 /* #define CONFIG_SECURE_BOOT */
 
 #ifdef CONFIG_SECURE_BOOT
-#ifndef CONFIG_CSF_SIZE
+#ifndef CONFIG_C_SIZE
 #define CONFIG_CSF_SIZE 0x4000
 #endif
 #endif
@@ -36,6 +36,7 @@
 #define CONFIG_SPL_LIBCOMMON_SUPPORT
 #define CONFIG_SPL_MMC_SUPPORT
 #define CONFIG_SPL_FAT_SUPPORT
+#define CONFIG_SPL_DMA_SUPPORT
 #include "imx6_spl.h"
 #endif
 
@@ -102,7 +103,7 @@
 
 /* UART */
 #define CONFIG_MXC_UART
-#define CONFIG_MXC_UART_BASE            UART2_IPS_BASE_ADDR
+#define CONFIG_MXC_UART_BASE            UART1_IPS_BASE_ADDR
 
 /* MMC */
 #define CONFIG_MMC
@@ -135,16 +136,23 @@
 #define CONFIG_CMD_MII
 #define CONFIG_FEC_MXC
 #define CONFIG_MII
-#define CONFIG_FEC_XCV_TYPE             RMII
+#define CONFIG_FEC_XCV_TYPE             RGMII
 #define CONFIG_ETHPRIME                 "FEC"
 
 #define CONFIG_PHYLIB
-#define CONFIG_PHY_SMSC
+#define CONFIG_PHY_ATHEROS
 
+#define CONFIG_FEC_ENET_DEV 0
 
+#if (CONFIG_FEC_ENET_DEV == 0)
+#define IMX_FEC_BASE			ENET_IPS_BASE_ADDR
+#define CONFIG_FEC_MXC_PHYADDR          0x4
+#elif (CONFIG_FEC_ENET_DEV == 1)
 #define IMX_FEC_BASE			ENET2_IPS_BASE_ADDR
-#define CONFIG_FEC_MXC_PHYADDR          0x0
-#define CONFIG_FEC_MXC_MDIO_BASE	ENET2_IPS_BASE_ADDR
+#define CONFIG_FEC_MXC_PHYADDR          0x5
+#endif
+
+#define CONFIG_FEC_MXC_MDIO_BASE	ENET_IPS_BASE_ADDR
 
 /* PMIC */
 #define CONFIG_POWER
@@ -164,16 +172,23 @@
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
+#define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 1 */
+#define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 1 */
+#define CONFIG_SYS_I2C_MXC_I2C4		/* enable I2C bus 1 */
 #define CONFIG_SYS_I2C_SPEED		100000
 
-#ifdef CONFIG_SYS_BOOT_QSPI
-#define CONFIG_SYS_USE_QSPI
+#ifdef CONFIG_SYS_BOOT_SPINOR
+#define CONFIG_SYS_USE_SPINOR
 #define CONFIG_ENV_IS_IN_SPI_FLASH
-#elif defined CONFIG_SYS_BOOT_NAND
-#define CONFIG_SYS_USE_NAND
-#define CONFIG_ENV_IS_IN_NAND
+#define CONFIG_SPL_SPI_SUPPORT
+#define CONFIG_SPL_SPI_FLASH_SUPPORT
+#define CONFIG_SPL_SPI_LOAD
+#define CONFIG_SPL_SPI_BUS		CONFIG_SF_DEFAULT_BUS
+#define CONFIG_SPL_SPI_CS		CONFIG_SF_DEFAULT_CS
+#define CONFIG_SYS_SPI_U_BOOT_OFFS	0x40000
+#define CONFIG_SYS_SPI_SPL_OFFS		0x400
 #else
-#define CONFIG_ENV_IS_NOWHERE
+#error "Boot possibile solo da NOR Flash SPI"
 #endif
 
 #define CONFIG_SUPPORT_EMMC_BOOT	/* eMMC specific */
@@ -218,18 +233,24 @@
 #define CONFIG_MFG_NAND_PARTITION ""
 #endif
 
+#ifdef CONFIG_WID
 #define CONFIG_MFG_ENV_SETTINGS \
-	"mfgtool_args=setenv bootargs console=${console},${baudrate} " \
-		"rdinit=/linuxrc " \
-		"g_mass_storage.stall=0 g_mass_storage.removable=1 " \
-		"g_mass_storage.idVendor=0x066F g_mass_storage.idProduct=0x37FF "\
-		"g_mass_storage.iSerialNumber=\"\" "\
-		CONFIG_MFG_NAND_PARTITION \
-		"clk_ignore_unused "\
-		"\0" \
-	"initrd_addr=0x83800000\0" \
-	"initrd_high=0xffffffff\0" \
-	"bootcmd_mfg=run mfgtool_args;bootz ${loadaddr} ${initrd_addr} ${fdt_addr};\0" \
+	"spl_copy_addr=0x80100000\0" \
+	"uboot_img_copy_addr=0x80600000\0" \
+	"bootcmd_mfg=sf probe;" \
+	"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+	"sf erase 0x0 0x200000;" \
+	"sf write ${spl_copy_addr} " __stringify(CONFIG_SYS_SPI_SPL_OFFS) " 0x20000;" \
+	"sf write ${uboot_img_copy_addr} " __stringify(CONFIG_SYS_SPI_U_BOOT_OFFS) " 0x100000;" \
+	"mw.l 800eFFF8 0100fbfa 1;" \
+	"if cmp.b 800eFFFC 800eFFF8 4; then " \
+		"init_eeprom " CONFIG_WID ";" \
+	"fi;" \
+	"gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";\0"
+
+#else
+#define CONFIG_MFG_ENV_SETTINGS ""
+#endif
 
 #define CONFIG_DFU_ENV_SETTINGS \
 	"dfu_alt_info=image raw 0 0x800000;"\
@@ -237,87 +258,24 @@
 		"bootimg part 0 1;"\
 		"rootfs part 0 2\0" \
 
-#if defined(CONFIG_SYS_BOOT_NAND)
-#define CONFIG_EXTRA_ENV_SETTINGS \
-	CONFIG_MFG_ENV_SETTINGS \
-	"panel=EGF_BLC1143\0" \
-	"fdt_addr=0x83000000\0" \
-	"fdt_high=0xffffffff\0"	  \
-	"console=ttymxc0\0" \
-	"bootargs=console=ttymxc0,115200 ubi.mtd=3 "  \
-		"root=ubi0:rootfs rootfstype=ubifs "		     \
-		"mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),-(rootfs)\0"\
-	"bootcmd=nand read ${loadaddr} 0x4000000 0x800000;"\
-		"nand read ${fdt_addr} 0x5000000 0x100000;"\
-		"bootz ${loadaddr} - ${fdt_addr}\0"
-
-#else
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	UPDATE_M4_ENV \
 	CONFIG_MFG_ENV_SETTINGS \
 	CONFIG_DFU_ENV_SETTINGS \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
-	"console=ttymxc1\0" \
+	"console=ttymxc0\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=imx7-egf-WID0547_AA01.01.dtb\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
-	"panel=EGF_BLC1143\0" \
-	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
-	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
-	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
-	"mmcautodetect=yes\0" \
-	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-		"root=${mmcroot}\0" \
-	"loadbootscript=" \
-		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
-	"bootscript=echo Running bootscript from mmc ...; " \
-		"source\0" \
-	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
-	"mmcboot=echo Booting from mmc ...; " \
-		"run mmcargs; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if run loadfdt; then " \
-				"bootz ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"if test ${boot_fdt} = try; then " \
-					"bootz; " \
-				"else " \
-					"echo WARN: Cannot load the DT; " \
-				"fi; " \
-			"fi; " \
-		"else " \
-			"bootz; " \
-		"fi;\0" \
-	"netargs=setenv bootargs console=${console},${baudrate} " \
-		"root=/dev/nfs " \
-	"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
-		"netboot=echo Booting from net ...; " \
-		"run netargs; " \
-		"if test ${ip_dyn} = yes; then " \
-			"setenv get_cmd dhcp; " \
-		"else " \
-			"setenv get_cmd tftp; " \
-		"fi; " \
-		"${get_cmd} ${image}; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
-				"bootz ${loadaddr} - ${fdt_addr}; " \
-			"else " \
-				"if test ${boot_fdt} = try; then " \
-					"bootz; " \
-				"else " \
-					"echo WARN: Cannot load the DT; " \
-				"fi; " \
-			"fi; " \
-		"else " \
-			"bootz; " \
-		"fi;\0" \
-	"sdargs=setenv bootargs console=${console},${baudrate} panel=${panel}\0" \
+	"g_ether_args=g_cdc.dev_addr=58:05:56:00:04:5e g_cdc.host_addr=58:05:56:00:04:5d\0"\
+	"destroyenv=sf probe; gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+				"sf unlock; sf erase 0x3F0000 0x10000;sf lock;" \
+				"gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+				"env default -f -a;\0" \
+	"sdargs=setenv bootargs console=${console},${baudrate} ${g_ether_args}\0" \
 	"loadimage_sd=fatload mmc 0:1 ${loadaddr} ${image}\0" \
 	"loadfdt_sd=fatload mmc 0:1 ${fdt_addr} ${fdt_file}\0" \
 	"sdboot=echo Try Booting from SD...; " \
@@ -329,7 +287,7 @@
 					"echo Loading update from SDCard; " \
 				"else " \
 					"echo Booting from SD Card;" \
-					"setenv sdargs ${sdargs} root=/dev/mmcblk1p2 rootwait rw; " \
+					"setenv sdargs ${sdargs} root=/dev/mmcblk0p2 rootwait rw; " \
 					"echo ${sdargs}; " \
 				"fi; " \
 				"run sdargs; " \
@@ -337,9 +295,40 @@
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"fi; " \
 		"fi;\0 " \
-	"bootcmd=echo Booting...; " \
-	"run sdboot;\0"
-#endif
+	"loadfdt_usb=fatload usb 0 ${fdt_addr} ${fdt_file}\0" \
+	"loadimage_usb=fatload usb 0 ${loadaddr} ${image}\0" \
+	"usbargs=setenv bootargs console=${console},${baudrate} ${g_ether_args}\0" \
+	"usbboot=echo Try Booting from USB...;" \
+		"usb start;" \
+		"if run loadfdt_usb; then " \
+			"if run loadimage_usb; then " \
+				"if test -e usb 0 update.bin; then " \
+					"echo Loading update from USB key; " \
+				"else " \
+					"echo Booting from USB key; " \
+					"setenv usbargs ${usbargs} root=/dev/sda2 rootwait rw; " \
+				"fi;" \
+				"fatload usb 0 0x10000000 /logo.bmp;bmp d 0x10000000;" \
+				"run usbargs; " \
+				"bootz ${loadaddr} - ${fdt_addr};" \
+			"fi; " \
+		"fi;\0 " \
+	"loadfdt_nand=nand read ${fdt_addr} 0xA00000 0x20000\0" \
+	"loadimage_nand=nand read ${loadaddr} 0x0 0xA00000\0" \
+	"nandargs=setenv bootargs console=${console},${baudrate} ${g_ether_args}\0" \
+	"nandboot=echo Try Booting from NAND...;" \
+			"if run loadfdt_nand; then " \
+				"if run loadimage_nand; then " \
+					"setenv nandargs ${nandargs} ubi.mtd=2 root=ubi0:rootfs rw rootfstype=ubifs; " \
+					"run nandargs; " \
+					"bootz ${loadaddr} - ${fdt_addr};" \
+				"fi; " \
+			"fi;\0 " \
+
+#define CONFIG_BOOTCOMMAND \
+	   "run usbboot;" \
+	   "run sdboot;" \
+	   "run nandboot"
 
 #define CONFIG_CMD_MEMTEST
 #define CONFIG_SYS_MEMTEST_START	0x80000000
@@ -371,9 +360,18 @@
  * If want to use nand, define CONFIG_NAND_MXS and rework board
  * to support nand, since emmc has pin conflicts with nand
  */
+#define CONFIG_SYS_USE_NAND
 #ifdef CONFIG_SYS_USE_NAND
 #define CONFIG_CMD_NAND
 #define CONFIG_CMD_NAND_TRIMFFS
+#define CONFIG_CMD_MTDPARTS
+
+#define CONFIG_CMD_UBI
+#define CONFIG_CMD_UBIFS
+#define CONFIG_MTD_DEVICE
+#define CONFIG_MTD_PARTITIONS
+#define CONFIG_RBTREE
+#define CONFIG_LZO
 
 /* NAND stuff */
 #define CONFIG_NAND_MXS
@@ -424,6 +422,20 @@
 #define CONFIG_SYS_FSL_USDHC_NUM	2
 #endif
 
+/* SPI Flash Config */
+#ifdef CONFIG_SYS_USE_SPINOR
+#define CONFIG_CMD_SF
+#define CONFIG_SPI_FLASH
+#define CONFIG_SPI_FLASH_SPANSION
+#define CONFIG_MXC_SPI
+#define CONFIG_SF_DEFAULT_BUS  1
+#define CONFIG_SF_DEFAULT_SPEED 20000000
+#define CONFIG_SF_DEFAULT_MODE (SPI_MODE_0)
+#define CONFIG_SF_DEFAULT_CS   0
+#define CONFIG_SF_DEFAULT_CS_GPIO IMX_GPIO_NR(4,23)
+#define CONFIG_SF_WPn_GPIO			138  /* GPIO5_IO10 */
+#endif
+
 /* MMC Config*/
 #define CONFIG_SYS_FSL_ESDHC_ADDR       0
 #define CONFIG_SYS_MMC_ENV_DEV		0   /* USDHC1 */
@@ -446,7 +458,7 @@
 
 #define CONFIG_CMD_BMODE
 
-#define CONFIG_VIDEO
+#undef CONFIG_VIDEO
 #ifdef CONFIG_VIDEO
 #define CONFIG_CFB_CONSOLE
 #define CONFIG_VIDEO_MXS
