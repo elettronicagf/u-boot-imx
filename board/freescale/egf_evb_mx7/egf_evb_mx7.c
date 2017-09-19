@@ -422,19 +422,19 @@ void ddr3_2g_smr4712_init(void)
 {
 	writel(0x00000002, 0x30391000); 	// deassert presetn
 	writel(0x03040001, 0x307A0000); 	// DDRC_MSTR
-	writel(0x0040005E, 0x307A0064); 	// DDRC_RFSHTMG
+	writel(0x0020005E, 0x307A0064);		// DDRC_RFSHTMG
 	writel(0x00000001, 0x307a0490);		// DDRC_PCTRL_0
 	writel(0x00690000, 0x307A00D4); 	// DDRC_INIT1 (if using LPDDR3/LPDDR2, this line is automatically commented out)
 	writel(0x00020083, 0x307A00D0);		// DDRC_INIT0
-	writel(0x09300004, 0x307A00DC); 	// DDRC_INIT3
-	writel(0x04080000, 0x307A00E0); 	// DDRC_INIT4
+	writel(0x09300006, 0x307A00DC); 	// DDRC_INIT3
+	writel(0x04880000, 0x307A00E0); 	// DDRC_INIT4
 	writel(0x00100004, 0x307A00E4); 	// DDRC_INIT5
 	writel(0x0000033F, 0x307A00F4); 	// DDRC_RANKCTL
-	writel(0x090A110A, 0x307A0100); 	// DDRC_DRAMTMG0
+	writel(0x090E080A, 0x307A0100); 	// DDRC_DRAMTMG0
 	writel(0x0007020E, 0x307A0104); 	// DDRC_DRAMTMG1
 	writel(0x03040407, 0x307A0108); 	// DDRC_DRAMTMG2
 	writel(0x00002006, 0x307A010C); 	// DDRC_DRAMTMG3
-	writel(0x04020204, 0x307A0110); 	// DDRC_DRAMTMG4
+	writel(0x04020304, 0x307A0110); 	// DDRC_DRAMTMG4
 	writel(0x03030202, 0x307A0114); 	// DDRC_DRAMTMG5
 	writel(0x00000803, 0x307A0120); 	// DDRC_DRAMTMG8
 	writel(0x00800020, 0x307A0180); 	// DDRC_ZQCTL0
@@ -444,12 +444,13 @@ void ddr3_2g_smr4712_init(void)
 	writel(0x00100020, 0x307A01A4); 	// DDRC_DFIUPD1
 	writel(0x80100004, 0x307A01A8); 	// DDRC_DFIUPD2
 	writel(0x00000016, 0x307A0200); 	// DDRC_ADDRMAP0
-	writel(0x00080808, 0x307A0204); 	// DDRC_ADDRMAP1
+	writel(0x00171717, 0x307A0204); 	// DDRC_ADDRMAP1
+	writel(0x00000000, 0x307A020C); 	// DDRC_ADDRMAP3
 	writel(0x00000F0F, 0x307A0210); 	// DDRC_ADDRMAP4
-	writel(0x07070707, 0x307A0214); 	// DDRC_ADDRMAP5
-	writel(0x0F070707, 0x307A0218); 	// DDRC_ADDRMAP6
+	writel(0x04040404, 0x307A0214); 	// DDRC_ADDRMAP5
+	writel(0x0F040404, 0x307A0218); 	// DDRC_ADDRMAP6
 	writel(0x06000604, 0x307A0240); 	// DDRC_ODTCFG
-	writel(0x00001323, 0x307A0244); 	// DDRC_ODTMAP
+	writel(0x00000201, 0x307A0244); 	// DDRC_ODTMAP
 
 	writel(0x00000000, 0x30391000); 	// deassert presetn
 	writel(0x17420F40, 0x30790000); 	// DDR_PHY_PHY_CON0
@@ -457,7 +458,6 @@ void ddr3_2g_smr4712_init(void)
 	writel(0x00060807, 0x30790010); 	// DDR_PHY_PHY_CON4
 	writel(0x1010007E, 0x307900B0); 	// DDR_PHY_MDLL_CON0
 	writel(0x00000D6E, 0x3079009C); 	// DDR_PHY_DRVDS_CON0
-
 	writel(0x06060606, 0x30790030); 	// DDR_PHY_OFFSET_WR_CON0
 	writel(0x0C0C0C0C, 0x30790020); 	// DDR_PHY_OFFSET_RD_CON0
 	writel(0x01000010, 0x30790050); 	// DDR_PHY_OFFSETD_CON0
@@ -466,6 +466,7 @@ void ddr3_2g_smr4712_init(void)
 	writel(0x0E407304, 0x307900C0); 	// DDR_PHY_ZQ_CON0 - Start Manual ZQ
 	writel(0x0E447304, 0x307900C0);
 	writel(0x0E447306, 0x307900C0);
+
 	while ((readl(0x307900c4) & 0x1) != 0x1);
 	writel(0x0E447304, 0x307900C0);
 	writel(0x0E407304, 0x307900C0); 	// DDR_PHY_ZQ_CON0 - End Manual ZQ
@@ -476,6 +477,7 @@ void ddr3_2g_smr4712_init(void)
 	//	<= NOTE: Depending on JTAG device used, may need ~ 250 us pause at this point.
 	writel(0x0000000f, 0x30790018);
 	while ((readl(0x307a0004) & 0x1) != 0x1);
+
 }
 
 static void spl_dram_init(void)
