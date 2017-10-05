@@ -172,9 +172,9 @@
 		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 		"sf write ${uboot_img_copy_addr} " __stringify(CONFIG_SYS_SPI_U_BOOT_OFFS) " 0x100000;" \
 		"sf lock;" \
-		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
-		"gpio clear " __stringify(CONFIG_DISP1_BKL_PWM_GPIO) ";" \
-		"gpio clear " __stringify(CONFIG_DISP1_BKL_PWR_EN_GPIO) ";\0 "
+		"run destroyenv;" \
+		"gpio clear 72;" \
+		"gpio clear 78;\0"
 #else
 #define CONFIG_MFG_ENV_SETTINGS ""
 #endif

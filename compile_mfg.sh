@@ -1,4 +1,4 @@
-VERSION=$(cat Makefile | grep EXTRAV | grep 0533 | awk -F"-" '{print $2"-"$3}')
+VERSION=$(cat Makefile | grep EXTRAV | grep 0533 | awk -F"-" '{print $2"-"$3"-"$4"-"$5 }')
 make distclean
 export CROSS_COMPILE=/opt/0533_panel_pc/sdk/toolchain/1.0/sysroots/x86_64-egf-linux/usr/bin/arm-egf-linux-gnueabi/arm-egf-linux-gnueabi-
 export KCFLAGS=--sysroot=/opt/0533_panel_pc/sdk/toolchain/1.0/sysroots/cortexa9hf-vfp-neon-egf-linux-gnueabi
