@@ -158,7 +158,9 @@
 				"env default -f -a;\0" \
 		"spl_copy_addr=0x12000000\0" \
 		"uboot_img_copy_addr=0x12500000\0" \
-		"bootcmd_mfg=sf probe;" \
+		"bootcmd_mfg=gpio set 69;" \
+		"gpio clear 68;" \
+		"sf probe;" \
 		"gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 		"sf unlock;" \
 		"sf erase 0x0 0x3F0000;" \
@@ -170,7 +172,9 @@
 		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 		"sf write ${uboot_img_copy_addr} " __stringify(CONFIG_SYS_SPI_U_BOOT_OFFS) " 0x100000;" \
 		"sf lock;" \
-		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";\0 "
+		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+		"gpio clear 69;" \
+		"gpio set 68;\0 "
 #else
 #define CONFIG_MFG_ENV_SETTINGS ""
 #endif
@@ -258,10 +262,26 @@
 				"echo invalid display selection ${panel}; " \
 			"fi;\0" \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
+	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} root=/dev/mmcblk0p2 rootwait rw \0" \
+	"loadimage_sd=fatload mmc 0:1 ${loadaddr} ${image}\0" \
+	"loadfdt_sd=fatload mmc 0:1 ${fdt_addr} ${fdt_file}\0" \
+	"loadsplash_sd=fatload mmc 0:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
+	"sdboot=echo Try Booting from uSD...; " \
+		"mmc rescan; " \
+		"if run loadfdt_sd; then " \
+			"if run loadimage_sd; then " \
+				"echo Booting from uSD Card; " \
+				"run sdargs; " \
+				"run loadsplash_sd;" \
+				"echo ${bootargs}; " \
+				"run fix_dt; " \
+				"bootz ${loadaddr} - ${fdt_addr}; " \
+			"fi; " \
+		"fi;\0 " \
 	"emmcargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} root=/dev/mmcblk2p2 rootwait rw \0" \
-	"loadimage_emmc=fatload mmc 0:1 ${loadaddr} ${image}\0" \
-	"loadfdt_emmc=fatload mmc 0:1 ${fdt_addr} ${fdt_file}\0" \
-	"loadsplash_emmc=fatload mmc 0:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
+	"loadimage_emmc=fatload mmc 1:1 ${loadaddr} ${image}\0" \
+	"loadfdt_emmc=fatload mmc 1:1 ${fdt_addr} ${fdt_file}\0" \
+	"loadsplash_emmc=fatload mmc 1:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
 	"emmcboot=echo Try Booting from eMMC...; " \
 		"mmc rescan; " \
 		"if run loadfdt_emmc; then " \
@@ -304,6 +324,8 @@
 	"run locknor;" \
 	/* Try usb update key */ \
 	"run usbboot;" \
+	/* Try boot from uSD */ \
+	"run sdboot;" \
 	/* Boot from eMMC */ \
 	"run emmcboot;\0"
 #endif
@@ -372,7 +394,7 @@
 #define CONFIG_MXC_SPI
 #define CONFIG_SF_DEFAULT_BUS  3
 #define CONFIG_SF_DEFAULT_SPEED 15000000
-#define CONFIG_SF_DEFAULT_MODE (SPI_MODE_0)
+#define CONFIG_SF_DEFAULT_MODE 		(SPI_MODE_0)
 #define CONFIG_SF_CS_GPIO			IMX_GPIO_NR(5, 2)
 #define CONFIG_SF_DEFAULT_CS		1
 #define CONFIG_SF_WPn_GPIO			90  /* GPIO3_IO26 */
@@ -464,7 +486,7 @@
 #include "mx6sabreandroid_common.h"
 #endif
 
-#define CONFIG_SYS_FSL_USDHC_NUM	1 	/* SD3 eMMC */
+#define CONFIG_SYS_FSL_USDHC_NUM	2 	/* SD1 microSD, SD3 eMMC */
 #define CONFIG_SYS_MMC_ENV_DEV		1	/* SDHC3 */
 #define CONFIG_SYS_MMC_ENV_PART                0       /* user partition */
 

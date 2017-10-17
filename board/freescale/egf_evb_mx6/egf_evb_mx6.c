@@ -62,13 +62,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define WID_LENGTH					15
 #define EGF_FDT_FILE_NAME_LENGTH	(13 + WID_LENGTH + 1)
 
-#define PWR_5V0_EN_3V3_GPIO		IMX_GPIO_NR(1,3)
-#define VIO_3V3_EN				IMX_GPIO_NR(6,14)
-
 #define I2C_PMIC	1
-
-#define DISP0_EN				IMX_GPIO_NR(5, 5)
-#define DISP0_BKL_PWM_GPIO		IMX_GPIO_NR(2, 9)
 
 #define PICOS2KHZ(a) (1000000000UL/(a))
 
@@ -104,6 +98,7 @@ void prepare_boot_env(void)
 
 #ifdef CONFIG_FSL_ESDHC
 struct fsl_esdhc_cfg usdhc_cfg[2] = {
+	{USDHC1_BASE_ADDR, 0, 4},
 	{USDHC3_BASE_ADDR},
 };
 
@@ -142,6 +137,9 @@ int board_mmc_getcd(struct mmc *mmc)
 	int ret = 0;
 
 	switch (cfg->esdhc_base) {
+	case USDHC1_BASE_ADDR:
+		ret = !gpio_get_value(SD1_CD_GPIO);
+		break;
 	case USDHC3_BASE_ADDR:
 		ret = 1; /* eMMC is always present */
 		break;
@@ -164,7 +162,11 @@ int board_mmc_init(bd_t *bis)
 	for (i = 0; i < CONFIG_SYS_FSL_USDHC_NUM; i++) {
 		switch (i) {
 		case 0:
-			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			gpio_direction_input(SD1_CD_GPIO);
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+			break;
+		case 1:
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
 			break;
 		default:
 			printf("Warning: you configured more USDHC controllers"
@@ -191,6 +193,11 @@ int board_mmc_init(bd_t *bis)
 
 	switch (reg & 0x3) {
 	case 0x1:
+		usdhc_cfg[0].esdhc_base = USDHC1_BASE_ADDR;
+		usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+		gd->arch.sdhc_clk = usdhc_cfg[0].sdhc_clk;
+		break;
+	case 0x2:
 		usdhc_cfg[0].esdhc_base = USDHC3_BASE_ADDR;
 		usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
 		gd->arch.sdhc_clk = usdhc_cfg[0].sdhc_clk;
@@ -331,7 +338,6 @@ static void blc1093_enable(struct display_info_t const *dev)
 	vpll_change_frequency(get_disp_pix_clock(dev));
 	enable_lvds(dev);
 	gpio_direction_output(DISP0_EN, 1);
-	gpio_direction_output(DISP0_BKL_PWM_GPIO, 1);
 }
 
 struct display_info_t const displays[] = {
@@ -610,17 +616,16 @@ int board_ehci_power(int port, int on)
 {
 	switch (port) {
 	case 0:
-		if (on) {
-			//Initialize IUSB pin status to BOOST
-			gpio_direction_output((IMX_GPIO_NR(2, 1)),0); //nIUSB1 = 0
-			gpio_direction_output((IMX_GPIO_NR(2, 2)),1); //IUSB2 = 1
-			gpio_direction_output((IMX_GPIO_NR(2, 6)),0); //IUSB3 = 0
-		} else {
-			//Reset IUSB pin status to 1500mA
-			gpio_direction_output((IMX_GPIO_NR(2, 1)),1); //nIUSB1 = 1
-			gpio_direction_output((IMX_GPIO_NR(2, 2)),1); //IUSB2 = 1
-			gpio_direction_output((IMX_GPIO_NR(2, 6)),0); //IUSB3 = 0
-		}
+		if (on)
+			gpio_direction_output(USB_OTG_PWR_EN_GPIO, 1);
+		else
+			gpio_direction_output(USB_OTG_PWR_EN_GPIO, 0);
+		break;
+	case 1:
+		if (on)
+			gpio_direction_output(USB_H1_PWR_EN_GPIO, 1);
+		else
+			gpio_direction_output(USB_H1_PWR_EN_GPIO, 0);
 		break;
 	default:
 		printf("MXC USB port %d not yet supported\n", port);
@@ -639,18 +644,19 @@ static void setup_spinor(void ){
 
 int board_spi_cs_gpio(unsigned bus, unsigned cs)
 {
-	return (bus == 3 && cs == 1) ? (CONFIG_SF_CS_GPIO) : -1;
+	if (bus == 3 && cs == 1)
+		return CONFIG_SF_CS_GPIO;
+	if (bus == 2 && cs == 1) {
+		printf("Asked for amoled cs\n");
+		return CONFIG_AMOLED_CS_GPIO;
+	}
+	return -1;
 }
 #endif
 
 static void setup_eeprom(void){
 	/* Set EEPROM write protected */
 	gpio_direction_output(EEPROM_nWP_GPIO,0);
-}
-
-static void setup_power_management(void){
-	gpio_direction_output(PWR_5V0_EN_3V3_GPIO,1);
-	gpio_direction_output(VIO_3V3_EN,1);
 }
 
 int board_early_init_f(void)
@@ -663,7 +669,6 @@ int board_early_init_f(void)
 		egf_board_mux_init(APPLICATION_MUX_MODE);
 		printf("Is boot from usb! \n");
 	}
-	setup_power_management();
 	setup_eeprom();
 
 #if defined(CONFIG_VIDEO_IPUV3)
@@ -914,7 +919,7 @@ int board_late_init(void)
 
 int checkboard(void)
 {
-	puts("Board: MX6 Panel PC - Elettronica GF\n");
+	puts("Board: Q5 i.MX6 SOM Evaluation Board - Elettronica GF\n");
 	return 0;
 }
 
