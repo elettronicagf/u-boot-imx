@@ -920,7 +920,7 @@ int board_late_init(void)
 
 int checkboard(void)
 {
-	puts("Board: Q5 i.MX6 SOM Evaluation Board - Elettronica GF\n");
+	puts("Board: Q29 i.MX6 SOM Evaluation Board - Elettronica GF\n");
 	return 0;
 }
 
