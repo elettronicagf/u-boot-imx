@@ -260,6 +260,16 @@
 				"echo Panel: EGF_BLC1093; " \
 			"else " \
 				"echo invalid display selection ${panel}; " \
+			"fi; " \
+			"i2c dev 2; " \
+			"if i2c probe 0x50 ; then " \
+				"echo \"------ have HDMI monitor\";" \
+			"else " \
+				"echo \"------ No HDMI monitor\";" \
+				"fdt set mxcfb0 disp_dev \"ldb\"; " \
+				"fdt set mxcfb1 disp_dev \"hdmi\"; " \
+				"fdt rm mxcfb0 mode_str; " \
+				"fdt set mxcfb1 mode_str \"1920x1080M@60\"; " \
 			"fi;\0" \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
 	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} root=/dev/mmcblk0p2 rootwait rw \0" \
@@ -402,6 +412,10 @@
 #define CONFIG_SF_CS_GPIO			IMX_GPIO_NR(5, 2)
 #define CONFIG_SF_DEFAULT_CS		1
 #define CONFIG_SF_WPn_GPIO			90  /* GPIO3_IO26 */
+#define CONFIG_AMOLED_SPI_BUS		2
+#define CONFIG_AMOLED_SPI_MODE 		(SPI_MODE_3)
+#define CONFIG_AMOLED_CS			1
+#define CONFIG_AMOLED_CS_GPIO		IMX_GPIO_NR(4, 25)
 #endif
 
 #ifdef CONFIG_SYS_USE_EIMNOR

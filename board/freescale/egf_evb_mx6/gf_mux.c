@@ -409,6 +409,7 @@ static void my_gpio_init_mux(void)
 {
 	SETUP_IOMUX_PADS(gpio_pads);
 	gpio_direction_output((IMX_GPIO_NR(3, 12)), 1);
+	gpio_direction_output((IMX_GPIO_NR(5, 5)), 0);
 	/* Enable HDMI translator */
 	gpio_direction_output((IMX_GPIO_NR(6, 11)), 1);
 	gpio_direction_output((IMX_GPIO_NR(6, 16)), 1);

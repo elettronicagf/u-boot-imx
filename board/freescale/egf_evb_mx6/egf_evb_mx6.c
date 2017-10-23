@@ -20,6 +20,7 @@
 #include <fsl_esdhc.h>
 #include <miiphy.h>
 #include <netdev.h>
+#include <spi.h>
 
 #if defined(CONFIG_MX6DL) && defined(CONFIG_MXC_EPDC)
 #include <lcd.h>
@@ -251,18 +252,6 @@ int board_phy_config(struct phy_device *phydev)
 }
 
 #if defined(CONFIG_VIDEO_IPUV3)
-static void disable_lvds(struct display_info_t const *dev)
-{
-	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
-
-	int reg = readl(&iomux->gpr[2]);
-
-	reg &= ~(IOMUXC_GPR2_LVDS_CH0_MODE_MASK |
-		 IOMUXC_GPR2_LVDS_CH1_MODE_MASK);
-
-	writel(reg, &iomux->gpr[2]);
-}
-
 static void enable_lvds(struct display_info_t const *dev)
 {
 	struct iomuxc *iomux = (struct iomuxc *)
@@ -275,36 +264,27 @@ static void enable_lvds(struct display_info_t const *dev)
 	writel(reg, &iomux->gpr[2]);
 }
 
-
-static void vpll_change_frequency(unsigned int pixclock){
+/* Adjust display pixel clock frequency to 12.8 MHz for BLC1071 */
+static void vpll_adjust_frequency(void){
 	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
 	unsigned int timeout = 100000;
-	unsigned int target_multiplier;
 	unsigned int div_select;
 	unsigned int num, denom;
-	if(pixclock > 92500000){
-		printf("Display Frequency not supported!\n");
-		return;
-	}
+
 	/* Bypass PLL5 */
 	setbits_le32(&ccm->analog_pll_video, BM_ANADIG_PLL_VIDEO_BYPASS);
 	/* Power Down PLL5 */
 	setbits_le32(&ccm->analog_pll_video, BM_ANADIG_PLL_VIDEO_POWERDOWN);
 
-	// Set PLL5 POST_DIV_SELECT to 1 (divide by 2) and PLL5 POST_DIV_SELECT to 37
-	// PLL Freq = Fref * (DIV_SELECT + NUM / DENOM) = 24M * (37 + 11/12) = 910
-	// PLL5 post div select = 910 / 2 = 455 MHz
-	// 455 MHz / 7 = 65 MHz (pixel clock)
-
-	printf("Changing frequency to %d\n", pixclock);
-	target_multiplier = (pixclock * 7 * 2) / 24;
-	printf("Target multiplier %d\n", (int)target_multiplier);
-	div_select = target_multiplier / 1000000;
-	printf("Div_select is %d\n", div_select);
-	num = target_multiplier - (div_select * 1000000);
-	printf("num %d\n", num);
+	div_select = 30;
+	num = 1;
 	denom = 1000000;
-	printf("Denom is %d\n", denom);
+
+	// Set PLL5 POST_DIV_SELECT to 1 (divide by 2), VIDEO_DIV to 3 (divide by 4) and PLL5 DIV_SELECT to 30
+	// PLL Freq = Fref * (DIV_SELECT + NUM / DENOM) = 24M * (30 + 1/1000000) = 720M
+	// PLL5 post div select = 720 / 2 = 360 MHz
+	// PLL5 post video div = 360 / 4 = 90 MHz
+	// 90 MHz / 7 = 12.85 MHz (pixel clock)
 
 	clrsetbits_le32(&ccm->analog_pll_video,
 			BM_ANADIG_PLL_VIDEO_DIV_SELECT |
@@ -315,6 +295,7 @@ static void vpll_change_frequency(unsigned int pixclock){
 	writel(BF_ANADIG_PLL_VIDEO_NUM_A(num), &ccm->analog_pll_video_num);
 	writel(BF_ANADIG_PLL_VIDEO_DENOM_B(denom), &ccm->analog_pll_video_denom);
 
+	setbits_le32(0x20c8170, 0x3<<30);
 	clrbits_le32(&ccm->analog_pll_video, BM_ANADIG_PLL_VIDEO_POWERDOWN);
 
 	while (timeout--)
@@ -330,36 +311,125 @@ static void vpll_change_frequency(unsigned int pixclock){
 
 }
 
-static unsigned int get_disp_pix_clock(struct display_info_t const *dev) {
-	return PICOS2KHZ(dev->mode.pixclock) * 1000;
+/***  AMOLED *******/
+
+typedef struct SpiCommandType {
+  unsigned char addr;								// Register address
+  unsigned char data;								// Register data
+} SpiCommand;
+
+static SpiCommand spi_display_init_commands[]= {						// Init command table
+  {0x04, 0x23}, //DISPLAY_MODE2: Mode 480RGBx272 + 24Bit Parallel RGB + DE
+  {0x05, 0x82}, //DISPLAY_MODE3: Stripe RGB + S160->S1
+  {0x03, 0x03}, //Adattato per Beagle HSync VSync (alti)  DE (basso) CLK(discesa)
+  {0x07, 0x0F}, //DRIVER_CAPABILITY: 67%
+  {0x34, 0x18}, //
+  {0x35, 0x28}, //T4: 40 DCLK
+  {0x36, 0x16}, //TF: 22 DCLK
+  {0x37, 0x01}, //TB:  1 DCLK
+  {0x02, 0x00}, //OTPOFF
+  {0x0A, 0x79}, //VGHVGL=+/- 6V
+  {0x09, 0x28}, //VGAM1OUT= 5.02V
+  {0x10, 0x77}, //R_SLOPE: Gamma correction
+  {0x11, 0x76}, //G_SLOPE: Gamma correction
+  {0x12, 0x77}, //B_SLOPE: Gamma correction
+  {0x13, 0x00}, //R_GAMMA0
+  {0x14, 0x00}, //R_GAMMA10
+  {0x15, 0x00}, //R_GAMMA36
+  {0x16, 0x00}, //R_GAMMA80
+  {0x17, 0x00}, //R_GAMMA124
+  {0x18, 0x00}, //R_GAMMA168
+  {0x19, 0x01}, //R_GAMMA212
+  {0x1A, 0x03}, //R_GAMMA255
+  {0x1B, 0x00}, //G_GAMMA0
+  {0x1C, 0x03}, //G_GAMMA10
+  {0x1D, 0x00}, //G_GAMMA36
+  {0x1E, 0x02}, //G_GAMMA80
+  {0x1F, 0x01}, //G_GAMMA124
+  {0x20, 0x02}, //G_GAMMA168
+  {0x21, 0x02}, //G_GAMMA212
+  {0x22, 0x06}, //G_GAMMA255
+  {0x23, 0x00}, //B_GAMMA0
+  {0x24, 0x02}, //B_GAMMA10
+  {0x25, 0x01}, //B_GAMMA36
+  {0x26, 0x02}, //B_GAMMA80
+  {0x27, 0x02}, //B_GAMMA124
+  {0x28, 0x03}, //B_GAMMA168
+  {0x29, 0x03}, //B_GAMMA212
+  {0x2A, 0x08}, //B_GAMMA255
+  {0x06, 0x03}, //POWER_CTRL1: No Reset + Normal Mode (No Standby)
+};
+
+static void send_display_spi_command(struct spi_slave *slave, SpiCommand* command, int delay_us)
+{
+  unsigned int txBuffer = 0;
+  unsigned int rxBuffer = 0;
+  udelay(delay_us);
+  txBuffer = (command->data << 8) & 0xFF00;
+  txBuffer |= (((command->addr << 1) & 0xFE));
+  spi_xfer(slave, 16, &txBuffer, &rxBuffer, SPI_XFER_BEGIN | SPI_XFER_END);
+}
+
+static void init_display(void)
+{
+	struct spi_slave *slave;
+	int i;
+	int n_commands;
+
+	printf("EGF Amoled init display\n");
+	slave = spi_setup_slave(CONFIG_AMOLED_SPI_BUS, CONFIG_AMOLED_CS, 1000000, CONFIG_AMOLED_SPI_MODE);
+	if (!slave) {
+		puts("unable to setup slave\n");
+		return;
+	}
+	if (spi_claim_bus(slave)) {
+		spi_free_slave(slave);
+		return;
+	}
+	gpio_direction_output(GPIO_DISPLAY_NRESET, 0);
+	gpio_direction_output(DISP0_EN,0);
+	udelay(100);
+	gpio_direction_output(DISP0_EN,1);
+	udelay(100);;
+	gpio_direction_output(GPIO_DISPLAY_NRESET, 1);
+	udelay(300);
+	n_commands = sizeof(spi_display_init_commands)/sizeof(SpiCommand);
+	for(i=0;i<n_commands;i++){
+		send_display_spi_command(slave, &spi_display_init_commands[i],250);
+	}
+	spi_release_bus(slave);
 }
 
 static void blc1093_enable(struct display_info_t const *dev)
 {
-	vpll_change_frequency(get_disp_pix_clock(dev));
+	vpll_adjust_frequency();
 	enable_lvds(dev);
-	gpio_direction_output(DISP0_EN, 1);
 }
 
 struct display_info_t const displays[] = {
 	{
 		.bus	= 0,
 		.addr	= 0,
-		.pixfmt	= IPU_PIX_FMT_RGB666,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
 		.detect	= NULL,
 		.enable	= blc1093_enable,
 		.mode	= {
 			.name           = "EGF_BLC1093", /*  KWH070KQ13-F02 Formike 7.0" */
 			.refresh        = 60,
-			.xres           = 800,
-			.yres           = 480,
-			.pixclock       = 22000,
-			.left_margin    = 45,
-			.right_margin   = 210,
-			.upper_margin   = 22,
-			.lower_margin   = 132,
-			.hsync_len      = 1,
-			.vsync_len      = 1,
+			.xres           = 480,
+			.yres           = 272,
+			/* HACK: Pixel clock set to 50MHz to avoid a bug in ipu timings management.
+			 * Checked all timings are calculated correctly, pixel clock is gen by pll5
+			 * If set to 12MHz, timings are not calculated correctly and image appear
+			 * stretched.
+			 */
+			.pixclock       = 20000,
+			.left_margin    = 102,
+			.right_margin   = 30,
+			.upper_margin   = 20,
+			.lower_margin   = 10,
+			.hsync_len      = 30,
+			.vsync_len      = 3,
 			.sync 			= FB_SYNC_EXT,
 			.vmode          = FB_VMODE_NONINTERLACED
 		}
@@ -374,10 +444,6 @@ static void enable_vpll(void)
 
 	setbits_le32(&ccm->analog_pll_video, BM_ANADIG_PLL_VIDEO_POWERDOWN);
 
-	// Set PLL5 POST_DIV_SELECT to 1 (divide by 2) and PLL5 POST_DIV_SELECT to 37
-	// PLL Freq = Fref * (DIV_SELECT + NUM / DENOM) = 24M * (37 + 11/12) = 910
-	// PLL5 post div select = 910 / 2 = 455 MHz
-	// 455 MHz / 7 = 65 MHz (pixel clock)
 	clrsetbits_le32(&ccm->analog_pll_video,
 			BM_ANADIG_PLL_VIDEO_DIV_SELECT |
 			(0x3 << 19),
@@ -516,22 +582,8 @@ static void setup_display(void)
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
 	int reg;
 
-	enable_ipu_clock();
-	enable_vpll();
 	select_ldb_di_clock_source_pll5();
-
-	/* Turn on LDB0, LDB1, IPU,IPU DI0 clocks */
-	reg = readl(&mxc_ccm->CCGR3);
-	reg |=  MXC_CCM_CCGR3_LDB_DI0_MASK | MXC_CCM_CCGR3_LDB_DI1_MASK;
-	writel(reg, &mxc_ccm->CCGR3);
-
-//	/* set LDB0, LDB1 clk select to 011/011 */
-//	reg = readl(&mxc_ccm->cs2cdr);
-//	reg &= ~(MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_MASK
-//		 | MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_MASK);
-//	reg |= (3 << MXC_CCM_CS2CDR_LDB_DI0_CLK_SEL_OFFSET)
-//	      | (3 << MXC_CCM_CS2CDR_LDB_DI1_CLK_SEL_OFFSET);
-//	writel(reg, &mxc_ccm->cs2cdr);
+	enable_vpll();
 
 	reg = readl(&mxc_ccm->cscmr2);
 	reg |= MXC_CCM_CSCMR2_LDB_DI0_IPU_DIV | MXC_CCM_CSCMR2_LDB_DI1_IPU_DIV;
@@ -543,6 +595,13 @@ static void setup_display(void)
 	reg |= (CHSCCDR_CLK_SEL_LDB_DI0
 		<< MXC_CCM_CHSCCDR_IPU1_DI1_CLK_SEL_OFFSET);
 	writel(reg, &mxc_ccm->chsccdr);
+
+	/* Turn on LDB0, LDB1, IPU,IPU DI0 clocks */
+	reg = readl(&mxc_ccm->CCGR3);
+	reg |=  MXC_CCM_CCGR3_LDB_DI0_MASK | MXC_CCM_CCGR3_LDB_DI1_MASK;
+	writel(reg, &mxc_ccm->CCGR3);
+
+	enable_ipu_clock();
 
 	reg = IOMUXC_GPR2_BGREF_RRMODE_EXTERNAL_RES
 	     | IOMUXC_GPR2_DI1_VS_POLARITY_ACTIVE_LOW
@@ -698,6 +757,8 @@ int board_init(void)
 			while(1);
 		}
 	}
+
+	init_display();
 
 	return 0;
 
