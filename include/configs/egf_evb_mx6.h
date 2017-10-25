@@ -174,7 +174,8 @@
 		"sf lock;" \
 		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 		"gpio clear 69;" \
-		"gpio set 68;\0 "
+		"gpio set 68;" \
+		"gpio clear 133;\0 "
 #else
 #define CONFIG_MFG_ENV_SETTINGS ""
 #endif
