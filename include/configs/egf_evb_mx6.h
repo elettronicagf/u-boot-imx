@@ -240,7 +240,7 @@
 	CONFIG_MFG_ENV_SETTINGS \
 	"locknor=sf probe;gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";sf lock;gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";\0" \
 	"unlocknor=sf probe;gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";sf unlock; ;\0" \
-	"panel=EGF_BLC1093\0" \
+	"panel=EGF_BLC1071\0" \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
 	"fdt_addr=0x18000000\0" \
@@ -257,11 +257,6 @@
 			"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 			"env default -f -a;\0" \
 	"fix_dt=fdt addr ${fdt_addr}; " \
-			"if test \"${panel}\" = \"EGF_BLC1093\"; then " \
-				"echo Panel: EGF_BLC1093; " \
-			"else " \
-				"echo invalid display selection ${panel}; " \
-			"fi; " \
 			"i2c dev 2; " \
 			"if i2c probe 0x50 ; then " \
 				"echo \"------ have HDMI monitor\";" \
@@ -273,7 +268,7 @@
 				"fdt set mxcfb1 mode_str \"1920x1080M@60\"; " \
 			"fi;\0" \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
-	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} root=/dev/mmcblk0p2 rootwait rw \0" \
+	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel} root=/dev/mmcblk0p2 rootwait rw \0" \
 	"loadimage_sd=fatload mmc 0:1 ${loadaddr} ${image}\0" \
 	"loadfdt_sd=fatload mmc 0:1 ${fdt_addr} ${fdt_file}\0" \
 	"loadsplash_sd=fatload mmc 0:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
@@ -289,7 +284,7 @@
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"fi; " \
 		"fi;\0 " \
-	"emmcargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} root=/dev/mmcblk2p2 rootwait rw \0" \
+	"emmcargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel} root=/dev/mmcblk2p2 rootwait rw \0" \
 	"loadimage_emmc=fatload mmc 1:1 ${loadaddr} ${image}\0" \
 	"loadfdt_emmc=fatload mmc 1:1 ${fdt_addr} ${fdt_file}\0" \
 	"loadsplash_emmc=fatload mmc 1:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
@@ -307,7 +302,7 @@
 		"fi;\0 " \
 	"loadfdt_usb=fatload usb 0 ${fdt_addr} ${fdt_file}\0" \
 	"loadimage_usb=fatload usb 0 ${loadaddr} ${image}\0" \
-	"usbargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
+	"usbargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel}\0" \
 	"usbboot=echo Try Booting from USB...;" \
 		"usb start;" \
 		"if run loadfdt_usb; then " \
@@ -324,7 +319,7 @@
 				"bootz ${loadaddr} - ${fdt_addr};" \
 			"fi; " \
 		"fi;\0 " \
-	"bootargs_sata=setenv bootargs console=${console},${baudrate} ${smp} " \
+	"bootargs_sata=setenv bootargs console=${console},${baudrate} ${smp} panel=${panel} " \
 			"root=/dev/sda1 rootwait rw \0" \
 	"bootcmd_sata=echo Booting from sata ...; " \
 			"run bootargs_sata; sata init; " \

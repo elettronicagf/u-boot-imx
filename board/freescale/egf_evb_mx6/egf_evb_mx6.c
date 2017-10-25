@@ -400,7 +400,7 @@ static void init_display(void)
 	spi_release_bus(slave);
 }
 
-static void blc1093_enable(struct display_info_t const *dev)
+static void blc1071_enable(struct display_info_t const *dev)
 {
 	vpll_adjust_frequency();
 	enable_lvds(dev);
@@ -412,9 +412,9 @@ struct display_info_t const displays[] = {
 		.addr	= 0,
 		.pixfmt	= IPU_PIX_FMT_RGB24,
 		.detect	= NULL,
-		.enable	= blc1093_enable,
+		.enable	= blc1071_enable,
 		.mode	= {
-			.name           = "EGF_BLC1093", /*  KWH070KQ13-F02 Formike 7.0" */
+			.name           = "EGF_BLC1071", /*  KWH070KQ13-F02 Formike 7.0" */
 			.refresh        = 60,
 			.xres           = 480,
 			.yres           = 272,
