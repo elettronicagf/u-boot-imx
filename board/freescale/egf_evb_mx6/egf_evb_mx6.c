@@ -388,11 +388,11 @@ static void init_display(void)
 	}
 	gpio_direction_output(GPIO_DISPLAY_NRESET, 0);
 	gpio_direction_output(DISP0_EN,0);
-	udelay(100);
+	udelay(300);
 	gpio_direction_output(DISP0_EN,1);
 	udelay(100);;
 	gpio_direction_output(GPIO_DISPLAY_NRESET, 1);
-	udelay(300);
+	udelay(600);
 	n_commands = sizeof(spi_display_init_commands)/sizeof(SpiCommand);
 	for(i=0;i<n_commands;i++){
 		send_display_spi_command(slave, &spi_display_init_commands[i],250);
