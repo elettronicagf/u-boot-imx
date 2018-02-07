@@ -147,6 +147,8 @@
 
 #define CONFIG_DISP1_BKL_PWM_GPIO		9
 #define CONFIG_DISP1_BKL_PWR_EN_GPIO	78
+#define CONFIG_DISP0_BKL_PWM_GPIO		42
+#define CONFIG_DISP0_BKL_PWR_EN_GPIO	72
 
 #ifdef CONFIG_WID
 #define CONFIG_MFG_ENV_SETTINGS \
@@ -174,7 +176,9 @@
 		"sf lock;" \
 		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 		"gpio clear " __stringify(CONFIG_DISP1_BKL_PWM_GPIO) ";" \
-		"gpio clear " __stringify(CONFIG_DISP1_BKL_PWR_EN_GPIO) ";\0 "
+		"gpio clear " __stringify(CONFIG_DISP1_BKL_PWR_EN_GPIO) ";" \
+		"gpio clear " __stringify(CONFIG_DISP0_BKL_PWM_GPIO) ";" \
+		"gpio clear " __stringify(CONFIG_DISP0_BKL_PWR_EN_GPIO) ";\0 "
 #else
 #define CONFIG_MFG_ENV_SETTINGS ""
 #endif
