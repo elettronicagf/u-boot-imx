@@ -111,7 +111,7 @@ int dram_init(void)
 	load_revision();
 #endif
 	printf("EGF SW ID: %s", egf_sw_id_code);
-	if(!gf_strcmp(egf_sw_id_code,REV_WID0575_AA0101))
+	if(!gf_strcmp(egf_sw_id_code,REV_WID0575_AA0101) || !gf_strcmp(egf_sw_id_code,REV_WID0575_AB0101))
 		gd->ram_size = SZ_2G;
 	else
 		gd->ram_size = PHYS_SDRAM_SIZE;
