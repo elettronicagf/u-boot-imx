@@ -13,21 +13,39 @@ mv u-boot.imx binaries/u-boot.imx.wid0510ab0101-$VERSION
 make egf_evb_mx6_mfg_wid0510ac0101_config
 make -j8
 mv u-boot.imx binaries/u-boot.imx.wid0510ac0101-$VERSION
+make egf_evb_mx6_mfg_wid0510ac0102_config
+make -j8
+mv u-boot.imx binaries/u-boot.imx.wid0510ac0102-$VERSION
 make egf_evb_mx6_mfg_wid0510ae0101_config
 make -j8
 mv u-boot.imx binaries/u-boot.imx.wid0510ae0101-$VERSION
+make egf_evb_mx6_mfg_wid0510ae0102_config
+make -j8
+mv u-boot.imx binaries/u-boot.imx.wid0510ae0102-$VERSION
 make egf_evb_mx6_mfg_wid0510ad0101_config
 make -j8
 mv u-boot.imx binaries/u-boot.imx.wid0510ad0101-$VERSION
 make egf_evb_mx6_mfg_wid0510af0101_config
 make -j8
 mv u-boot.imx binaries/u-boot.imx.wid0510af0101-$VERSION
+make egf_evb_mx6_mfg_wid0510af0102_config
+make -j8
+mv u-boot.imx binaries/u-boot.imx.wid0510af0102-$VERSION
 make egf_evb_mx6_mfg_wid0510ag0101_config
 make -j8
 mv u-boot.imx binaries/u-boot.imx.wid0510ag0101-$VERSION
+make egf_evb_mx6_mfg_wid0510ag0102_config
+make -j8
+mv u-boot.imx binaries/u-boot.imx.wid0510ag0102-$VERSION
 make egf_evb_mx6_mfg_wid0510aj0101_config
 make -j8
 mv u-boot.imx binaries/u-boot.imx.wid0510aj0101-$VERSION
+make egf_evb_mx6_mfg_wid0510aj0102_config
+make -j8
+mv u-boot.imx binaries/u-boot.imx.wid0510aj0102-$VERSION
 make egf_evb_mx6_mfg_wid0510ak0101_config
 make -j8
 mv u-boot.imx binaries/u-boot.imx.wid0510ak0101-$VERSION
+make egf_evb_mx6_mfg_wid0510ak0102_config
+make -j8
+mv u-boot.imx binaries/u-boot.imx.wid0510ak0102-$VERSION
