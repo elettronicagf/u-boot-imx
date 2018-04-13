@@ -929,6 +929,7 @@ int usb_new_device(struct usb_device *dev)
 	__maybe_unused struct usb_device_descriptor *desc;
 	struct usb_device *parent = dev->parent;
 	unsigned short portstatus;
+	int retry = 5;
 
 	/* send 64-byte GET-DEVICE-DESCRIPTOR request.  Since the descriptor is
 	 * only 18 bytes long, this will terminate with a short packet.  But if
@@ -949,9 +950,13 @@ int usb_new_device(struct usb_device *dev)
 	 * of that is done for XHCI unlike EHCI.
 	 */
 #ifndef CONFIG_USB_XHCI
+again:
+	mdelay(50);
 	err = usb_get_descriptor(dev, USB_DT_DEVICE, 0, desc, 64);
 	if (err < 0) {
 		debug("usb_new_device: usb_get_descriptor() failed\n");
+        if (--retry >= 0)
+            goto again; /* Some drives are just slow to wake up. */		
 		return 1;
 	}
 
