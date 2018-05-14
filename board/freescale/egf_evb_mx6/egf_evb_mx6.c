@@ -616,6 +616,7 @@ int board_ehci_power(int port, int on)
 			gpio_direction_output((IMX_GPIO_NR(2, 1)),0); //nIUSB1 = 0
 			gpio_direction_output((IMX_GPIO_NR(2, 2)),1); //IUSB2 = 1
 			gpio_direction_output((IMX_GPIO_NR(2, 6)),0); //IUSB3 = 0
+			mdelay(100);
 		} else {
 			//Reset IUSB pin status to 1500mA
 			gpio_direction_output((IMX_GPIO_NR(2, 1)),1); //nIUSB1 = 1
