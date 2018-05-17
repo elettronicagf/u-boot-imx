@@ -49,3 +49,6 @@ mv u-boot.imx binaries/u-boot.imx.wid0510ak0101-$VERSION
 make egf_evb_mx6_mfg_wid0510ak0102_config
 make -j8
 mv u-boot.imx binaries/u-boot.imx.wid0510ak0102-$VERSION
+make egf_evb_mx6_mfg_wid0510an0101_config
+make -j8
+mv u-boot.imx binaries/u-boot.imx.wid0510an0101-$VERSION

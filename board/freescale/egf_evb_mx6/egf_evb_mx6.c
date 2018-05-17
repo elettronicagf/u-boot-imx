@@ -1407,6 +1407,7 @@ void board_recovery_setup(void)
 #define REV_WID0510_AG0102 "WID0510_AG01.02"
 #define REV_WID0510_AJ0102 "WID0510_AJ01.02"
 #define REV_WID0510_AK0102 "WID0510_AK01.02"
+#define REV_WID0510_AN0101 "WID0510_AN01.01"
 
 #define MT41K128M16JT_125 		1
 #define MT41K256M16TW_107 		2
@@ -1561,6 +1562,16 @@ static struct egf_som the_som_WID_0510_AK0102 = {
 		&mx6dq_128x16_mmdc_calib_x64,
 };
 
+static struct egf_som the_som_WID_0510_AN0101 = {
+		MT41K128M16JT_125,
+		DDR_BUS_WIDTH_32BIT,
+		1,
+		&mx6sdl_ddr_ioregs_standard,
+		&mx6sdl_grp_ioregs_standard,
+		&mx6sdl_128x16_mmdc_calib_default,
+};
+
+
 int load_revision(void)
 {
 	char * egf_sw_id_code;
@@ -1662,6 +1673,12 @@ int load_revision(void)
 		/* SW Revision is WID0510_AK01.02 */
 		printf("GF Software ID Code: WID0510_AK01.02\n");
 		memcpy(&the_som, &the_som_WID_0510_AK0102, sizeof(the_som));
+	}
+	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AN0101))
+	{
+		/* SW Revision is WID0510_AN01.01 */
+		printf("GF Software ID Code: WID0510_AN01.01\n");
+		memcpy(&the_som, &the_som_WID_0510_AN0101, sizeof(the_som));
 	}
 	else {
 		printf("Unrecognized EGF SW ID Code: %s\n",egf_sw_id_code);
