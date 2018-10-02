@@ -59,6 +59,7 @@
 #include "ddr_mx6/WID0500_AB01.01.c"
 #include "ddr_mx6/WID0500_AC01.01.c"
 #include "ddr_mx6/WID0500_AD01.01.c"
+#include "ddr_mx6/WID0500_AE01.01.c"
 #endif
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -1104,6 +1105,7 @@ void board_recovery_setup(void)
 #define REV_WID0500_AB0101 "WID0500_AB01.01"
 #define REV_WID0500_AC0101 "WID0500_AC01.01"
 #define REV_WID0500_AD0101 "WID0500_AD01.01"
+#define REV_WID0500_AE0101 "WID0500_AE01.01"
 
 #define MT41K128M16JT_125 		1
 #define MT41K256M16HA_125 		2
@@ -1131,6 +1133,10 @@ static struct egf_som the_som_WID_0500_AC0101 = {
 
 static struct egf_som the_som_WID_0500_AD0101 = {
 	WID0500_AD01_01_ddr_setup,
+};
+
+static struct egf_som the_som_WID_0500_AE0101 = {
+	WID0500_AE01_01_ddr_setup,
 };
 
 static int gf_strcmp(const char * cs, const char * ct) {
@@ -1179,6 +1185,12 @@ int load_revision(void)
 		/* SW Revision is WID0500_AD01.01 */
 		printf("GF Software ID Code: WID0500_AD01.01\n");
 		memcpy(&the_som, &the_som_WID_0500_AD0101, sizeof(the_som));
+	}
+	else if (!gf_strcmp(egf_sw_id_code,REV_WID0500_AE0101))
+	{
+		/* SW Revision is WID0500_AE01.01 */
+		printf("GF Software ID Code: WID0500_AE01.01\n");
+		memcpy(&the_som, &the_som_WID_0500_AE0101, sizeof(the_som));
 	}
 	else {
 		printf("Unrecognized EGF SW ID Code: %s\n",egf_sw_id_code);
