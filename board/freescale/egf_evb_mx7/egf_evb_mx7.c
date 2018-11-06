@@ -47,6 +47,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define EGF_FDT_FILE_NAME_LENGTH	(13 + WID_LENGTH + 1)
 #define REV_WID0575_AA0101 "WID0575_AA01.01"
 #define REV_WID0575_AB0101 "WID0575_AB01.01"
+#define REV_WID0575_AA0102 "WID0575_AA01.02"
 
 static char *  __attribute__((section (".data"))) egf_sw_id_code;
 
@@ -67,6 +68,12 @@ void egf_mux_init(void)
 	{
 		/* SW Revision is WID0575_AA01.01 */
 		printf("GF Software ID Code: REV_WID0575_AA01.01\n");
+		egf_mux_init_wid0575_aa0101();
+	}
+	else if(!gf_strcmp(egf_sw_id_code,REV_WID0575_AA0102))
+	{
+		/* SW Revision is WID0575_AA01.02 */
+		printf("GF Software ID Code: REV_WID0575_AA01.02\n");
 		egf_mux_init_wid0575_aa0101();
 	}
 	else if (!gf_strcmp(egf_sw_id_code,REV_WID0575_AB0101))
@@ -111,7 +118,9 @@ int dram_init(void)
 	load_revision();
 #endif
 	printf("EGF SW ID: %s", egf_sw_id_code);
-	if(!gf_strcmp(egf_sw_id_code,REV_WID0575_AA0101) || !gf_strcmp(egf_sw_id_code,REV_WID0575_AB0101))
+	if(!gf_strcmp(egf_sw_id_code,REV_WID0575_AA0101) ||
+	   !gf_strcmp(egf_sw_id_code,REV_WID0575_AB0101) ||
+	   !gf_strcmp(egf_sw_id_code,REV_WID0575_AA0102))
 		gd->ram_size = SZ_2G;
 	else
 		gd->ram_size = PHYS_SDRAM_SIZE;
@@ -480,10 +489,76 @@ void ddr3_2g_smr4712_init(void)
 
 }
 
+/* 2GiB DDR3 SMR4722 x 2 chip */
+void ddr3_2g_smr4722_init(void)
+{
+	writel(0x00000002, 0x30391000); 	// deassert presetn
+	writel(0x01040001, 0x307A0000); 	// DDRC_MSTR
+	writel(0x00200050, 0x307A0064);		// DDRC_RFSHTMG
+	writel(0x00000001, 0x307a0490);		// DDRC_PCTRL_0
+	writel(0x00690000, 0x307A00D4); 	// DDRC_INIT1 (if using LPDDR3/LPDDR2, this line is automatically commented out)
+	writel(0x00020083, 0x307A00D0);		// DDRC_INIT0
+	writel(0x09300004, 0x307A00DC); 	// DDRC_INIT3
+	writel(0x04880000, 0x307A00E0); 	// DDRC_INIT4
+	writel(0x00100004, 0x307A00E4); 	// DDRC_INIT5
+	writel(0x0000033F, 0x307A00F4); 	// DDRC_RANKCTL
+	writel(0x09080809, 0x307A0100); 	// DDRC_DRAMTMG0
+	writel(0x0007020D, 0x307A0104); 	// DDRC_DRAMTMG1
+	writel(0x03040407, 0x307A0108); 	// DDRC_DRAMTMG2
+	writel(0x00002006, 0x307A010C); 	// DDRC_DRAMTMG3
+	writel(0x04020205, 0x307A0110); 	// DDRC_DRAMTMG4
+	writel(0x03030202, 0x307A0114); 	// DDRC_DRAMTMG5
+	writel(0x00000803, 0x307A0120); 	// DDRC_DRAMTMG8
+	writel(0x00800020, 0x307A0180); 	// DDRC_ZQCTL0
+	writel(0x02098204, 0x307A0190); 	// DDRC_DFITMG0
+	writel(0x00030303, 0x307A0194); 	// DDRC_DFITMG1
+	writel(0x80400003, 0x307A01A0); 	// DDRC_DFIUPD0
+	writel(0x00100020, 0x307A01A4); 	// DDRC_DFIUPD1
+	writel(0x80100004, 0x307A01A8); 	// DDRC_DFIUPD2
+	writel(0x0000001F, 0x307A0200); 	// DDRC_ADDRMAP0
+	writel(0x00080808, 0x307A0204); 	// DDRC_ADDRMAP1
+	writel(0x00000000, 0x307A020C); 	// DDRC_ADDRMAP3
+	writel(0x00000F0F, 0x307A0210); 	// DDRC_ADDRMAP4
+	writel(0x07070707, 0x307A0214); 	// DDRC_ADDRMAP5
+	writel(0x07070707, 0x307A0218); 	// DDRC_ADDRMAP6
+	writel(0x06000604, 0x307A0240); 	// DDRC_ODTCFG
+	writel(0x00000001, 0x307A0244); 	// DDRC_ODTMAP
+
+	writel(0x00000000, 0x30391000); 	// deassert presetn
+	writel(0x17420F40, 0x30790000); 	// DDR_PHY_PHY_CON0
+	writel(0x10210100, 0x30790004); 	// DDR_PHY_PHY_CON1
+	writel(0x00060807, 0x30790010); 	// DDR_PHY_PHY_CON4
+	writel(0x1010007E, 0x307900B0); 	// DDR_PHY_MDLL_CON0
+	writel(0x00000D6E, 0x3079009C); 	// DDR_PHY_DRVDS_CON0
+	writel(0x04040404, 0x30790030); 	// DDR_PHY_OFFSET_WR_CON0
+	writel(0x0A0A0A0A, 0x30790020); 	// DDR_PHY_OFFSET_RD_CON0
+	writel(0x01000010, 0x30790050); 	// DDR_PHY_OFFSETD_CON0
+	writel(0x00000010, 0x30790050); 	// DDR_PHY_OFFSETD_CON0
+	writel(0x0000000F, 0x30790018); 	// DDR_PHY_LP_CON0
+	writel(0x0E407304, 0x307900C0); 	// DDR_PHY_ZQ_CON0 - Start Manual ZQ
+	writel(0x0E447304, 0x307900C0);
+	writel(0x0E447306, 0x307900C0);
+
+	while ((readl(0x307900c4) & 0x1) != 0x1);
+	writel(0x0E447304, 0x307900C0);
+	writel(0x0E407304, 0x307900C0); 	// DDR_PHY_ZQ_CON0 - End Manual ZQ
+
+	writel(0x00000000, 0x30384130); 	//Disable Clock
+	writel(0x00000178, 0x30340020); 	// IOMUX_GRP_GRP8 - Start input to PHY
+	writel(0x00000002, 0x30384130); 	//Enable Clock
+	//	<= NOTE: Depending on JTAG device used, may need ~ 250 us pause at this point.
+	writel(0x0000000f, 0x30790018);
+	while ((readl(0x307a0004) & 0x1) != 0x1);
+
+}
+
+
 static void spl_dram_init(void)
 {
 	if(!gf_strcmp(egf_sw_id_code,REV_WID0575_AA0101) || !gf_strcmp(egf_sw_id_code,REV_WID0575_AB0101))
 		ddr3_2g_smr4712_init();
+	else if (!gf_strcmp(egf_sw_id_code,REV_WID0575_AA0102))
+		ddr3_2g_smr4722_init();
 	else
 		printf("Error: WID not supported!\n");
 

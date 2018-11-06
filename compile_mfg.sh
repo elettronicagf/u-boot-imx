@@ -10,3 +10,6 @@ cp u-boot.imx binaries/u-boot.imx.wid0575aa0101-$VERSION
 make egf_evb_mx7_mfg_wid0575_ab0101_config
 make -j8
 cp u-boot.imx binaries/u-boot.imx.wid0575ab0101-$VERSION
+make egf_evb_mx7_mfg_wid0575_aa0102_config
+make -j8
+cp u-boot.imx binaries/u-boot.imx.wid0575aa0102-$VERSION
