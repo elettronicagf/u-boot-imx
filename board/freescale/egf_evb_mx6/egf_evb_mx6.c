@@ -57,6 +57,8 @@
 #include "gf_ddr_parameters.h"
 #endif
 
+#include "../drivers/video/mxcfb.h"
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #define WID_LENGTH					15
@@ -375,7 +377,7 @@ static unsigned int get_disp_pix_clock(struct display_info_t const *dev) {
 	return PICOS2KHZ(dev->mode.pixclock) * 1000;
 }
 
-static void blc1134_enable(struct display_info_t const *dev)
+static void lvds_disp_enable_pgf0533_a01(struct display_info_t const *dev)
 {
 	vpll_change_frequency(get_disp_pix_clock(dev));
 	enable_lvds(dev);
@@ -384,142 +386,64 @@ static void blc1134_enable(struct display_info_t const *dev)
 	gpio_direction_output(DISP1_BKL_PWR_EN_GPIO, 1);
 }
 
-static void blc1133_enable(struct display_info_t const *dev)
+static void lvds_disp_enable_dual_bl_pgf0533_a01(struct display_info_t const *dev)
 {
 	vpll_change_frequency(get_disp_pix_clock(dev));
 	enable_lvds(dev);
+	gpio_direction_output(DISP1_EN, 1);
 	gpio_direction_output(DISP1_BKL_PWM_GPIO, 1);
 	gpio_direction_output(DISP1_BKL_PWR_EN_GPIO, 1);
 	gpio_direction_output(DISP0_BKL_PWM_GPIO, 1);
 	gpio_direction_output(DISP0_BKL_PWR_EN_GPIO, 1);
 }
 
-static void blc1136_enable(struct display_info_t const *dev)
+static void rgb_disp_enable_pgf0533_a01(struct display_info_t const *dev)
+{
+	gpio_direction_output(DISP0_EN, 1);
+	gpio_direction_output(DISP0_BKL_PWM_GPIO, 1);
+	gpio_direction_output(DISP0_BKL_PWR_EN_GPIO, 1);
+}
+
+static void lvds_disp_enable_pgf0533_a02(struct display_info_t const *dev)
 {
 	vpll_change_frequency(get_disp_pix_clock(dev));
 	enable_lvds(dev);
+	gpio_direction_output(LCD_PWR_EN_GPIO, 1);
+	gpio_direction_output(DISP1_EN, 1);
 	gpio_direction_output(DISP1_LVDS_GPIO, 1);
-	gpio_direction_output(DISP1_EN, 1);
 	gpio_direction_output(DISP1_BKL_PWM_GPIO, 1);
 	gpio_direction_output(DISP1_BKL_PWR_EN_GPIO, 1);
-
 }
 
-static void blc1148_enable(struct display_info_t const *dev)
+static void rgb_disp_enable_pgf0533_a02(struct display_info_t const *dev)
 {
-	vpll_change_frequency(get_disp_pix_clock(dev));
-	enable_lvds(dev);
+	gpio_direction_output(LCD_PWR_EN_GPIO, 1);
+	gpio_direction_output(DISP1_EN, 1);
 	gpio_direction_output(DISP1_LVDS_GPIO, 1);
-	gpio_direction_output(DISP1_EN, 1);
-	gpio_direction_output(DISP1_BKL_PWM_GPIO, 1);
-	gpio_direction_output(DISP1_BKL_PWR_EN_GPIO, 1);
-
-}
-
-static void blc1093_enable(struct display_info_t const *dev)
-{
-	gpio_direction_output(DISP0_EN, 1);
-	gpio_direction_output(DISP0_BKL_PWM_GPIO, 1);
-	gpio_direction_output(DISP0_BKL_PWR_EN_GPIO, 1);
-}
-
-
-static void blc1102_enable(struct display_info_t const *dev)
-{
-	gpio_direction_output(DISP0_EN, 1);
-	gpio_direction_output(DISP0_BKL_PWM_GPIO, 1);
-	gpio_direction_output(DISP0_BKL_PWR_EN_GPIO, 1);
-}
-
-static void blc1081_enable(struct display_info_t const *dev)
-{
-	gpio_direction_output(DISP0_EN, 1);
-	gpio_direction_output(DISP0_BKL_PWM_GPIO, 1);
-	gpio_direction_output(DISP0_BKL_PWR_EN_GPIO, 1);
-
-}
-
-static void blc1135_enable(struct display_info_t const *dev)
-{
-	vpll_change_frequency(get_disp_pix_clock(dev));
-	enable_lvds(dev);
 	gpio_direction_output(DISP1_BKL_PWM_GPIO, 1);
 	gpio_direction_output(DISP1_BKL_PWR_EN_GPIO, 1);
 }
+
+static void lvds_disp_enable(struct display_info_t const *dev)
+{
+	int pcb_rev;
+	pcb_rev = gf_get_pcb_rev();
+
+	if (pcb_rev == PCB_REV_PGF0533_A02)
+		lvds_disp_enable_pgf0533_a02(dev);
+	else
+		lvds_disp_enable_pgf0533_a01(dev);
+}
+
 
 struct display_info_t const displays[] = {
+	/* PGF0533_A01 Only */
 	{
 		.bus	= 0,
 		.addr	= 0,
 		.pixfmt	= IPU_PIX_FMT_RGB24,
 		.detect	= NULL,
-		.enable	= blc1136_enable,
-		.mode	= {
-			.name           = "EGF_BLC1136", /* G104S1-L01 Innolux 10.4" */
-			.refresh        = 60,
-			.xres           = 800,
-			.yres           = 600,
-			.pixclock       = 22222,
-			.left_margin    = 128,
-			.right_margin   = 128,
-			.upper_margin   = 14,
-			.lower_margin   = 14,
-			.hsync_len      = 60,
-			.vsync_len      = 20,
-			.sync           = FB_SYNC_EXT,
-			.vmode          = FB_VMODE_NONINTERLACED
-		}
-	},
-	{
-		.bus	= 0,
-		.addr	= 0,
-		.pixfmt	= IPU_PIX_FMT_RGB24,
-		.detect	= NULL,
-		.enable	= blc1148_enable,
-		.mode	= {
-			.name           = "EGF_BLC1148", /* G104S1-L01 Innolux 10.4" */
-			.refresh        = 60,
-			.xres           = 1024,
-			.yres           = 600,
-			.pixclock       = 19531,
-			.left_margin    = 160,
-			.right_margin   = 160,
-			.upper_margin   = 17,
-			.lower_margin   = 18,
-			.hsync_len      = 40,
-			.vsync_len      = 20,
-			.sync           = FB_SYNC_EXT,
-			.vmode          = FB_VMODE_NONINTERLACED
-		}
-	},
-	{
-		.bus	= 0,
-		.addr	= 0,
-		.pixfmt	= IPU_PIX_FMT_RGB24,
-		.detect	= NULL,
-		.enable	= blc1134_enable,
-		.mode	= {
-			.name           = "EGF_BLC1134", /* G121I1-L01 Innolux 12.1" */
-			.refresh        = 60,
-			.xres           = 1280,
-			.yres           = 800,
-			.pixclock       = 14084,
-			.left_margin    = 80,
-			.right_margin   = 80,
-			.upper_margin   = 12,
-			.lower_margin   = 11,
-			.hsync_len      = 60,
-			.vsync_len      = 10,
-			.sync           = FB_SYNC_EXT,
-			.vmode          = FB_VMODE_NONINTERLACED
-		}
-	},
-	{
-		.bus	= 0,
-		.addr	= 0,
-		.pixfmt	= IPU_PIX_FMT_RGB24,
-		.detect	= NULL,
-		.enable	= blc1133_enable,
+		.enable	= lvds_disp_enable_dual_bl_pgf0533_a01,
 		.mode	= {
 			.name           = "EGF_BLC1133", /* DLC1010AZG-T-6 DLC 10.1" */
 			.refresh        = 60,
@@ -541,7 +465,7 @@ struct display_info_t const displays[] = {
 		.addr	= 0,
 		.pixfmt	= IPU_PIX_FMT_RGB24,
 		.detect	= NULL,
-		.enable	= blc1093_enable,
+		.enable	= rgb_disp_enable_pgf0533_a01,
 		.mode	= {
 			.name           = "EGF_BLC1093", /*  KWH070KQ13-F02 Formike 7.0" */
 			.refresh        = 60,
@@ -563,7 +487,7 @@ struct display_info_t const displays[] = {
 		.addr	= 0,
 		.pixfmt	= IPU_PIX_FMT_RGB24,
 		.detect	= NULL,
-		.enable	= blc1093_enable,
+		.enable	= rgb_disp_enable_pgf0533_a01,
 		.mode	= {
 			.name           = "EGF_BLC1113", /*  KWH070KQ13-F01 Formike 7.0 without touchscreen" */
 			.refresh        = 60,
@@ -585,7 +509,7 @@ struct display_info_t const displays[] = {
 		.addr	= 0,
 		.pixfmt	= IPU_PIX_FMT_RGB24,
 		.detect	= NULL,
-		.enable	= blc1081_enable,
+		.enable	= rgb_disp_enable_pgf0533_a01,
 		.mode	= {
 			.name           = "EGF_BLC1081", /*  WL_AT070TN84-ETT-A1 T1242A 7.0" */
 			.refresh        = 60,
@@ -602,50 +526,164 @@ struct display_info_t const displays[] = {
 			.vmode          = FB_VMODE_NONINTERLACED
 		}
 	},
+	/* PGF0533_A02 Only */
 	{
 		.bus	= 0,
 		.addr	= 0,
 		.pixfmt	= IPU_PIX_FMT_RGB24,
 		.detect	= NULL,
-		.enable	= blc1102_enable,
+		.enable	= lvds_disp_enable_pgf0533_a02,
 		.mode	= {
-			.name           = "EGF_BLC1102", /*  UMSH-8394MD-5T URT 5.7" */
+			.name           = "EGF_BLC1168", /* DLC1010LZG-T-1 10.1" Cap Touch */
 			.refresh        = 60,
-			.xres           = 640,
-			.yres           = 480,
-			.pixclock       = 39700,
-			.left_margin    = 80,
-			.right_margin   = 80,
-			.upper_margin   = 25,
-			.lower_margin   = 20,
-			.hsync_len      = 30,
-			.vsync_len      = 3,
-			.sync           = 0,
+			.xres           = 1024,
+			.yres           = 600,
+			.pixclock       = 19531,
+			.left_margin    = 160,
+			.right_margin   = 160,
+			.upper_margin   = 23,
+			.lower_margin   = 12,
+			.hsync_len      = 10,
+			.vsync_len      = 10,
+			.sync           = FB_SYNC_EXT,
 			.vmode          = FB_VMODE_NONINTERLACED
 		}
 	},
 	{
 		.bus	= 0,
 		.addr	= 0,
-		.pixfmt	= IPU_PIX_FMT_RGB666,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
 		.detect	= NULL,
-		.enable	= blc1135_enable,
+		.enable	= lvds_disp_enable_pgf0533_a02,
 		.mode	= {
-			.name           = "EGF_BLC1135", /* 13-080SMLB4RB0-S Digiwise 8" */
+			.name           = "EGF_BLC1167", /* DLC1010LZG-T 10.1" Res Touch */
 			.refresh        = 60,
-			.xres           = 800,
+			.xres           = 1024,
 			.yres           = 600,
-			.pixclock       = 21854,
-			.left_margin    = 46,
-			.right_margin   = 16,
+			.pixclock       = 19531,
+			.left_margin    = 160,
+			.right_margin   = 160,
 			.upper_margin   = 23,
 			.lower_margin   = 12,
-			.hsync_len      = 40,
-			.vsync_len      = 20,
+			.hsync_len      = 10,
+			.vsync_len      = 10,
 			.sync           = FB_SYNC_EXT,
 			.vmode          = FB_VMODE_NONINTERLACED
 		}
-	}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= lvds_disp_enable_pgf0533_a02,
+		.mode	= {
+			.name           = "EGF_BLC1173", /*  DLC1010ADM42LT-C-2 10.1" Cap Touch */
+			.refresh        = 60,
+			.xres           = 1024,
+			.yres           = 600,
+			.pixclock       = 19531,
+			.left_margin    = 160,
+			.right_margin   = 160,
+			.upper_margin   = 23,
+			.lower_margin   = 12,
+			.hsync_len      = 10,
+			.vsync_len      = 10,
+			.sync           = FB_SYNC_EXT,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= rgb_disp_enable_pgf0533_a02,
+		.mode	= {
+			.name           = "EGF_BLC1149", /*  DLC0700OZR-T 7" 4-wire Res Touch */
+			.refresh        = 60,
+			.xres           = 800,
+			.yres           = 480,
+			.pixclock       = 35000,
+			.left_margin    = 46,
+			.right_margin   = 20,
+			.upper_margin   = 23,
+			.lower_margin   = 10,
+			.hsync_len      = 1,
+			.vsync_len      = 1,
+			.sync           = FB_SYNC_CLK_LAT_FALL | FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= rgb_disp_enable_pgf0533_a02,
+		.mode	= {
+			.name           = "EGF_BLC1152", /*  DLC0700O2ZR-T-7 7" Cap Touch */
+			.refresh        = 60,
+			.xres           = 800,
+			.yres           = 480,
+			.pixclock       = 35000,
+			.left_margin    = 46,
+			.right_margin   = 20,
+			.upper_margin   = 23,
+			.lower_margin   = 10,
+			.hsync_len      = 1,
+			.vsync_len      = 1,
+			.sync           = FB_SYNC_CLK_LAT_FALL | FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= rgb_disp_enable_pgf0533_a02,
+		.mode	= {
+			.name           = "EGF_BLC1172", /*  DLC0700OZR-3 7" No Touch */
+			.refresh        = 60,
+			.xres           = 800,
+			.yres           = 480,
+			.pixclock       = 35000,
+			.left_margin    = 46,
+			.right_margin   = 20,
+			.upper_margin   = 23,
+			.lower_margin   = 10,
+			.hsync_len      = 1,
+			.vsync_len      = 1,
+			.sync           = FB_SYNC_CLK_LAT_FALL | FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+	/* Display supported by both PGF0533_A01 and PGF0533_A02 */
+	{
+		.bus	= 0,
+		.addr	= 0,
+		.pixfmt	= IPU_PIX_FMT_RGB24,
+		.detect	= NULL,
+		.enable	= lvds_disp_enable,
+		.mode	= {
+			.name           = "EGF_BLC1134", /* G121I1-L01 Innolux 12.1" */
+			.refresh        = 60,
+			.xres           = 1280,
+			.yres           = 800,
+			.pixclock       = 14084,
+			.left_margin    = 80,
+			.right_margin   = 80,
+			.upper_margin   = 12,
+			.lower_margin   = 11,
+			.hsync_len      = 60,
+			.vsync_len      = 10,
+			.sync           = FB_SYNC_EXT,
+			.vmode          = FB_VMODE_NONINTERLACED
+		}
+	},
+
+
 };
 size_t display_count = ARRAY_SIZE(displays);
 
@@ -668,11 +706,42 @@ int board_video_skip(void)
 				strcpy(panel, "EGF_BLC1133");
 				setenv("panel", panel);
 			}
-			if(!gf_strcmp(board_sw_id_code, REV_WID0533_AB0101))
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_AB0101))
 			{
 				strcpy(panel, "EGF_BLC1133");
 				setenv("panel", panel);
 			}
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BA0101))
+			{
+				strcpy(panel, "EGF_BLC1168");
+				setenv("panel", panel);
+			}
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BA0201))
+			{
+				strcpy(panel, "EGF_BLC1167");
+				setenv("panel", panel);
+			}
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BB0101))
+			{
+				strcpy(panel, "EGF_BLC1149");
+				setenv("panel", panel);
+			}
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BB0201))
+			{
+				strcpy(panel, "EGF_BLC1172");
+				setenv("panel", panel);
+			}
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BB0301))
+			{
+				strcpy(panel, "EGF_BLC1152");
+				setenv("panel", panel);
+			}
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BC0101))
+			{
+				strcpy(panel, "EGF_BLC1173");
+				setenv("panel", panel);
+			}
+
 		}
 	} else {
 		strcpy(panel, panel_env);

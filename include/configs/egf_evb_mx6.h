@@ -23,6 +23,7 @@
 #define CONFIG_MMCROOT			"/dev/mmcblk2p2"  /* SDHC3 */
 
 #define EGF_EVB_MX6
+
 #define CONFIG_CMD_INIT_EEPROM
 
 #define CONFIG_MX6
@@ -258,84 +259,142 @@
 			"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 			"env default -f -a;\0" \
 	"fix_dt=fdt addr ${fdt_addr}; " \
-			"if test \"${panel}\" = \"EGF_BLC1136\"; then " \
-				"fdt rm EGF_BLC1134; " \
+			"if test \"${pcb_rev}\" = \"PGF0533_A01\"; then " \
+				"fdt rm rtc_pcf85063a; " \
+			"elif test \"${pcb_rev}\" = \"PGF0533_A02\"; then " \
+				"fdt rm rtc_mcp7941x; " \
+				"fdt rm rtc_mcp7941x_eeprom; " \
+			"fi; " \
+			"if test \"${panel}\" = \"EGF_BLC1134\"; then " \
 				"fdt rm EGF_BLC1133; " \
-				"fdt rm EGF_BLC1135; " \
-				"fdt rm EGF_BLC1148; " \
+				"fdt rm EGF_BLC1168; " \
+				"fdt rm EGF_BLC1173; " \
 				"fdt rm ft5x06; " \
 				"fdt rm ar1020; " \
-			"elif test \"${panel}\" = \"EGF_BLC1148\"; then " \
-				"fdt rm EGF_BLC1134; " \
-				"fdt rm EGF_BLC1133; " \
-				"fdt rm EGF_BLC1135; " \
-				"fdt rm EGF_BLC1136; " \
-				"fdt rm ft5x06; " \
-				"fdt rm ar1020; " \
-			"elif test \"${panel}\" = \"EGF_BLC1134\"; then " \
-				"fdt rm EGF_BLC1136; " \
-				"fdt rm EGF_BLC1133; " \
-				"fdt rm EGF_BLC1135; " \
-				"fdt rm EGF_BLC1148; " \
-				"fdt rm ft5x06; " \
-				"fdt rm ar1020; " \
+				"fdt rm tsc2046; " \
+				"if test \"${pcb_rev}\" = \"PGF0533_A01\"; then " \
+					"fdt set backlight3 status \"okay\"; " \
+					"fdt set panel3 status \"okay\"; " \
+				"else " \
+					"fdt set backlight3 status \"okay\"; " \
+					"fdt set panel4 status \"okay\"; " \
+				"fi; " \
 			"elif test \"${panel}\" = \"EGF_BLC1133\"; then " \
 				"fdt rm EGF_BLC1134; " \
-				"fdt rm EGF_BLC1136; " \
-				"fdt rm EGF_BLC1135; " \
-				"fdt rm EGF_BLC1148; " \
+				"fdt rm EGF_BLC1168; " \
+				"fdt rm EGF_BLC1173; " \
+				"fdt rm EGF_BLC1167; " \
 				"fdt rm ar1020; " \
-				"fdt set backlight2 status okay; " \
-				"fdt set backlight1 status \"disabled\"; " \
-				"fdt set panel1 status disabled; " \
-				"fdt set panel2 status okay; " \
+				"fdt rm tsc2046; " \
+				"fdt set backlight2 status \"okay\"; " \
+				"fdt set panel2 status \"okay\"; " \
 			"elif test \"${panel}\" = \"EGF_BLC1093\"; then " \
 				"fdt rm EGF_BLC1134; " \
-				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
-				"fdt rm EGF_BLC1135; " \
-				"fdt rm EGF_BLC1148; " \
+				"fdt rm EGF_BLC1168; " \
+				"fdt rm EGF_BLC1173; " \
+				"fdt rm EGF_BLC1167; " \
 				"fdt rm ft5x06; " \
+				"fdt rm tsc2046; " \
 				"fdt set mxcfb0 disp_dev \"lcd\"; " \
 				"fdt set mxcfb0 mode_str \"EGF_BLC1093\"; " \
+				"fdt set backlight1 status \"okay\"; " \
+				"fdt set panel1 status \"okay\"; " \
 			"elif test \"${panel}\" = \"EGF_BLC1113\"; then " \
 				"fdt rm EGF_BLC1134; " \
-				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
-				"fdt rm EGF_BLC1135; " \
-				"fdt rm EGF_BLC1148; " \
+				"fdt rm EGF_BLC1168; " \
+				"fdt rm EGF_BLC1173; " \
+				"fdt rm EGF_BLC1167; " \
 				"fdt rm ft5x06; " \
 				"fdt rm ar1020; " \
+				"fdt rm tsc2046; " \
 				"fdt set mxcfb0 disp_dev \"lcd\"; " \
 				"fdt set mxcfb0 mode_str \"EGF_BLC1113\"; " \
+				"fdt set backlight1 status \"okay\"; " \
+				"fdt set panel1 status \"okay\"; " \
 			"elif test \"${panel}\" = \"EGF_BLC1081\"; then " \
 				"fdt rm EGF_BLC1134; " \
-				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
-				"fdt rm EGF_BLC1135; " \
-				"fdt rm EGF_BLC1148; " \
+				"fdt rm EGF_BLC1168; " \
+				"fdt rm EGF_BLC1173; " \
+				"fdt rm EGF_BLC1167; " \
 				"fdt rm ft5x06; " \
+				"fdt rm tsc2046; " \
 				"fdt set mxcfb0 disp_dev \"lcd\"; " \
 				"fdt set mxcfb0 mode_str \"EGF_BLC1081\"; " \
-			"elif test \"${panel}\" = \"EGF_BLC1102\"; then " \
+				"fdt set backlight1 status \"okay\"; " \
+				"fdt set panel1 status \"okay\"; " \
+			"elif test \"${panel}\" = \"EGF_BLC1168\"; then " \
 				"fdt rm EGF_BLC1134; " \
-				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
-				"fdt rm EGF_BLC1135; " \
-				"fdt rm EGF_BLC1148; " \
-				"fdt rm ft5x06; " \
+				"fdt rm EGF_BLC1173; " \
+				"fdt rm EGF_BLC1167; " \
 				"fdt rm ar1020; " \
-				"fdt set mxcfb0 disp_dev \"lcd\"; " \
-				"fdt set mxcfb0 mode_str \"EGF_BLC1102\"; " \
-			"elif test \"${panel}\" = \"EGF_BLC1135\"; then " \
+				"fdt rm tsc2046; " \
+				"fdt set backlight3 status \"okay\"; " \
+				"fdt set panel4 status \"okay\"; " \
+			"elif test \"${panel}\" = \"EGF_BLC1167\"; then " \
 				"fdt rm EGF_BLC1134; " \
-				"fdt rm EGF_BLC1136; " \
 				"fdt rm EGF_BLC1133; " \
-				"fdt rm EGF_BLC1148; " \
-				"fdt set mxcfb0 interface_pix_fmt RGB666; " \
-				"fdt set mxcfb0 default_bpp <18>; " \
-				"fdt set lvds_channel1 fsl,data-width <18>; " \
+				"fdt rm EGF_BLC1173; " \
+				"fdt rm EGF_BLC1168; " \
+				"fdt rm ar1020; " \
 				"fdt rm ft5x06; " \
+				"fdt set tsc2046 ti,x-plate-ohms [02 b2]; " \
+				"fdt set tsc2046 ti,y-plate-ohms [00 cc]; " \
+				"fdt set backlight3 status \"okay\"; " \
+				"fdt set panel4 status \"okay\"; " \
+			"elif test \"${panel}\" = \"EGF_BLC1173\"; then " \
+				"fdt rm EGF_BLC1134; " \
+				"fdt rm EGF_BLC1133; " \
+				"fdt rm EGF_BLC1168; " \
+				"fdt rm EGF_BLC1167; " \
+				"fdt rm ar1020; " \
+				"fdt rm tsc2046; " \
+				"fdt set backlight3 status \"okay\"; " \
+				"fdt set panel4 status \"okay\"; " \
+			"elif test \"${panel}\" = \"EGF_BLC1149\"; then " \
+				"fdt rm EGF_BLC1134; " \
+				"fdt rm EGF_BLC1133; " \
+				"fdt rm EGF_BLC1168; " \
+				"fdt rm EGF_BLC1173; " \
+				"fdt rm EGF_BLC1167; " \
+				"fdt rm ar1020; " \
+				"fdt rm ft5x06; " \
+				"fdt set tsc2046 ti,x-plate-ohms [02 5f]; " \
+				"fdt set tsc2046 ti,y-plate-ohms [00 e1]; " \
+				"fdt set mxcfb0 disp_dev \"lcd\"; " \
+				"fdt set mxcfb0 mode_str \"EGF_BLC1149\"; " \
+				"fdt set backlight3 status \"okay\"; " \
+				"fdt set panel4 status \"okay\"; " \
+			"elif test \"${panel}\" = \"EGF_BLC1152\"; then " \
+				"fdt rm EGF_BLC1134; " \
+				"fdt rm EGF_BLC1133; " \
+				"fdt rm EGF_BLC1168; " \
+				"fdt rm EGF_BLC1173; " \
+				"fdt rm EGF_BLC1167; " \
+				"fdt rm ar1020; " \
+				"fdt rm tsc2046; " \
+				"fdt set ft5x06 invert-x-axis [00]; " \
+				"fdt set ft5x06 invert-y-axis [00]; " \
+				"fdt set mxcfb0 disp_dev \"lcd\"; " \
+				"fdt set mxcfb0 mode_str \"EGF_BLC1152\"; " \
+				"fdt set backlight3 status \"okay\"; " \
+				"fdt set panel4 status \"okay\"; " \
+			"elif test \"${panel}\" = \"EGF_BLC1172\"; then " \
+				"fdt rm EGF_BLC1134; " \
+				"fdt rm EGF_BLC1133; " \
+				"fdt rm EGF_BLC1168; " \
+				"fdt rm EGF_BLC1173; " \
+				"fdt rm EGF_BLC1167; " \
+				"fdt rm ar1020; " \
+				"fdt rm tsc2046; " \
+				"fdt rm ft5x06; " \
+				"fdt set mxcfb0 disp_dev \"lcd\"; " \
+				"fdt set mxcfb0 mode_str \"EGF_BLC1172\"; " \
+				"fdt set backlight3 status \"okay\"; " \
+				"fdt set panel4 status \"okay\"; " \
 			"else " \
 				"echo invalid display selection ${panel}; " \
 			"fi;" \
