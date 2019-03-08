@@ -659,6 +659,8 @@ void pgf_0533_a02_mux(void)
 	gpio_direction_output(IMX_GPIO_NR(3, 1), 0); // UART2-RS232-RS485-MODE = 0
 	gpio_direction_output(IMX_GPIO_NR(3, 3), 1); // UART2-SLEW = 1
 
+	gpio_direction_output(IMX_GPIO_NR(1, 4), 1); // RTC-CLKOE = 1
+
 }
 
 void egf_board_common_mux_init(int mode)
