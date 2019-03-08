@@ -102,6 +102,7 @@ void prepare_boot_env(void)
 	char* mac_address;
 	char fdt_file_name[EGF_FDT_FILE_NAME_LENGTH];
 	u32 uartBase;
+	u32 pcb_rev;
 
 	egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
 	fdt_file_name[0] = 0;
@@ -137,6 +138,20 @@ void prepare_boot_env(void)
 		setenv("console","ttymxc4");
 		break;
 	}
+
+	pcb_rev = gf_get_pcb_rev();
+	switch(pcb_rev){
+	case PCB_REV_PGF0533_A01:
+		setenv("pcb_rev", "PGF0533_A01");
+		break;
+	case PCB_REV_PGF0533_A02:
+		setenv("pcb_rev", "PGF0533_A02");
+		break;
+	default:
+		setenv("pcb_rev", "");
+		break;
+	}
+
 }
 
 #ifdef CONFIG_FSL_ESDHC
