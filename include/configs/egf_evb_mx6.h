@@ -253,6 +253,7 @@
 	"fdt_high=0xffffffff\0"	  \
 	"bootargs=console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
 	"initrd_high=0xffffffff\0" \
+	"audio=1\0 " \
 	"mmcautodetect=yes\0" \
 	"destroyenv=sf probe; gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 			"sf unlock; sf erase 0x3F0000 0x10000;sf lock;" \
@@ -264,6 +265,9 @@
 			"elif test \"${pcb_rev}\" = \"PGF0533_A02\"; then " \
 				"fdt rm rtc_mcp7941x; " \
 				"fdt rm rtc_mcp7941x_eeprom; " \
+			"fi; " \
+			"if test \"${audio}\" = \"0\"; then " \
+				"fdt rm sound; " \
 			"fi; " \
 			"if test \"${panel}\" = \"EGF_BLC1134\"; then " \
 				"fdt rm EGF_BLC1133; " \

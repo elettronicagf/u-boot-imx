@@ -99,6 +99,7 @@ int dram_init(void)
 void prepare_boot_env(void)
 {
 	char * egf_sw_id_code;
+	char * board_sw_id_code;
 	char* mac_address;
 	char fdt_file_name[EGF_FDT_FILE_NAME_LENGTH];
 	u32 uartBase;
@@ -150,6 +151,14 @@ void prepare_boot_env(void)
 	default:
 		setenv("pcb_rev", "");
 		break;
+	}
+
+	board_sw_id_code = gf_eeprom_get_board_sw_id_code();
+	if (board_sw_id_code)
+	{
+		if((!gf_strcmp(board_sw_id_code, REV_WID0533_AB0101)) ||
+		  (!gf_strcmp(board_sw_id_code, REV_WID0533_BC0101)))
+			setenv("audio", "0");
 	}
 
 }
