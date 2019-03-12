@@ -618,11 +618,11 @@ void init_gf_board_eeprom(void)
 	init_eeprom(&board_eeprom, BOARD_EEPROM_I2C_BUS_NO, BOARD_EEPROM_I2C_ADDRESS, 2);
 }
 
-int gf_load_som_revision(char ** egf_sw_id_code, int bypass_checks)
+void gf_load_som_revision(void)
 {
 	int som_eeprom_hw_status;
 	int som_eeprom_protocol;
-	char * serial_number;
+	char * egf_sw_id_code;
 	int ret;
 	int index = 0;
 	int eeprom_is_empty;
@@ -637,7 +637,7 @@ int gf_load_som_revision(char ** egf_sw_id_code, int bypass_checks)
 	{
 		/* If SOM eeprom is not found stop boot */
 		gf_debug(0,"SOM Eeprom not detected. HW issue?\n");
-		return -1;
+		return;
 	}
 	eeprom_is_empty = som_eeprom_is_new();
 	if(eeprom_is_empty != 1)
@@ -650,8 +650,7 @@ int gf_load_som_revision(char ** egf_sw_id_code, int bypass_checks)
 			load_som_eeprom();
 #ifdef EEPROM_UPGRADE
 			/* If SOM eeprom is programmed with an old protocol version update it */
-			if (bypass_checks == 0 &&
-				som_eeprom_protocol != EEPROM_UNKNOWN_PROTOCOL &&
+			if (som_eeprom_protocol != EEPROM_UNKNOWN_PROTOCOL &&
 				som_eeprom_protocol < EEPROM_LATEST_PROTOCOL_VERSION)
 			{
 				/* SOM eeprom upgrade needed */
@@ -664,28 +663,22 @@ int gf_load_som_revision(char ** egf_sw_id_code, int bypass_checks)
 			}
 #endif
 			/* Get SW ID code and serial number stored in SOM eeprom */
-			*egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
-			serial_number = gf_eeprom_get_som_serial_number();
-			if (serial_number != NULL) {
-				gf_debug(1,"SOM Serial Number: %s\n",serial_number);
-			}
+			egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
 			/* If SW ID is programmed, eeprom is validated */
-			if (*egf_sw_id_code != NULL)
+			if (egf_sw_id_code != NULL)
 			{
-				return 0;
+				return;
 			}
 			gf_debug(0,"Invalid GF Software ID code\n");
 		}
 
-		if (bypass_checks != 0)
-			return -1;
 		/* Ask user confirmation to reprogram eeprom */
 		gf_serial_init();
 		gf_debug(0,"Eeprom corrupted.Reprogram now? [Type y to confirm] ");
 		c = gf_serial_getc();
 		gf_debug(0,"%c\n",c);
 		if(c != 'y' && c != 'Y')
-			return -1;
+			return;
 	} else {
 		printf("Eeprom is empty and needs to be programmed.\n");
 	}
@@ -694,7 +687,8 @@ int gf_load_som_revision(char ** egf_sw_id_code, int bypass_checks)
 	ret = gf_read_programmer_file(EEPROM_PROGRAMMER_FILE_NAME,gf_file_buffer,EEPROM_PROGRAMMER_FILE_BUFFER_SIZE);
 	if (ret == -1)
 	{
-		return -1;
+		gf_debug(0,"GF Eeprom programmer file not found.\n");
+		return;
 	}
 	gf_debug(0,"GF Eeprom programmer file found. Entering EEPROM programming mode\n");
 	gf_debug(2,"Read from Eeprom programmer file: %s\n",gf_file_buffer);
@@ -728,22 +722,15 @@ int gf_load_som_revision(char ** egf_sw_id_code, int bypass_checks)
 	/* Re-load SOM eeprom after programming */
 	som_eeprom_protocol = identify_eeprom_protocol_som();
 	load_som_eeprom();
-	*egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
-	/* If SW ID is programmed, eeprom is validated */
-	if (*egf_sw_id_code != NULL)
-	{
-		return 0;
-	}
-	return -1;
+	return;
 
 }
 
-int gf_load_board_revision(char ** egf_sw_id_code)
+void gf_load_board_revision(void)
 {
 	int board_eeprom_hw_status;
 	int board_eeprom_protocol;
 	int eeprom_is_empty;
-	char * serial_number;
 
 	init_gf_board_eeprom();
 	/* Detect board eeprom */
@@ -752,7 +739,7 @@ int gf_load_board_revision(char ** egf_sw_id_code)
 	{
 		/* If Board eeprom is not found stop boot */
 		gf_debug(0,"Board Eeprom not detected. HW issue?\n");
-		return -1;
+		return;
 	}
 	eeprom_is_empty = board_eeprom_is_new();
 	if(eeprom_is_empty != 1)
@@ -765,8 +752,7 @@ int gf_load_board_revision(char ** egf_sw_id_code)
 			load_board_eeprom();
 #ifdef EEPROM_UPGRADE
 			/* If board eeprom is programmed with an old protocol version update it */
-			if (bypass_checks == 0 &&
-				board_eeprom_protocol != EEPROM_UNKNOWN_PROTOCOL &&
+			if (board_eeprom_protocol != EEPROM_UNKNOWN_PROTOCOL &&
 				board_eeprom_protocol < EEPROM_LATEST_PROTOCOL_VERSION)
 			{
 				/* board eeprom upgrade needed */
@@ -778,21 +764,9 @@ int gf_load_board_revision(char ** egf_sw_id_code)
 				load_board_eeprom();
 			}
 #endif
-			/* Get SW ID code and serial number stored in SOM eeprom */
-			*egf_sw_id_code = gf_eeprom_get_board_sw_id_code();
-			serial_number = gf_eeprom_get_board_serial_number();
-			if (serial_number != NULL) {
-				gf_debug(1,"Board Serial Number: %s\n",serial_number);
-			}
-			/* If SW ID is programmed, eeprom is validated */
-			if (*egf_sw_id_code != NULL)
-			{
-				return 0;
-			}
-			gf_debug(0,"Invalid GF Software ID code\n");
 		}
 	}
-	return -1;
+	return;
 }
 
 
@@ -847,5 +821,36 @@ int reset_gf_som_eeprom_content(char* egf_sw_id_code, int ask_confirmation)
 		return 0;
 	}
 	return -1;
+}
 
+u32 gf_get_debug_uart_base(void)
+{
+	char * egf_board_sw_id_code;
+	int ret;
+
+	egf_board_sw_id_code = gf_eeprom_get_board_sw_id_code();
+
+	if(egf_board_sw_id_code) {
+		if (!gf_strncmp(egf_board_sw_id_code, WID_REV_PGF0533_A01, sizeof(WID_REV_PGF0533_A01)-1)) {
+			/* Board is based on PGF0533_A01. Debug UART is UART2 */
+			return UART2_BASE;
+		} else if (!gf_strncmp(egf_board_sw_id_code, WID_REV_PGF0533_A02, sizeof(WID_REV_PGF0533_A02)-1)) {
+			/* Board is based on PGF0533_A02. Debug UART is UART1 */
+			return UART1_BASE;
+		} else {
+			/* Unknown Board Revision. Default to UART1 */
+			return UART1_BASE;
+		}
+	} else {
+		/* Board EEPROM is not programmed. Try to guess board revision */
+		gpio_direction_input(IMX_GPIO_NR(1,4));
+		ret = gpio_get_value(IMX_GPIO_NR(1,4));
+		if (ret == 0){
+			/* On PGF0533_A02 there is a 10k pulldown on GPIO1-IO04 */
+			return UART1_BASE;
+		} else {
+			/* On PGF0533_A01 there is a 10k pullup on GPIO1-IO04 */
+			return UART2_BASE;
+		}
+	}
 }

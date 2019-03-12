@@ -19,10 +19,10 @@
 #endif
 
 #define CONFIG_MACH_TYPE	3980
-#define CONFIG_MXC_UART_BASE	UART2_BASE
-#define CONFIG_CONSOLE_DEV		"ttymxc1"
+#define GF_EEPROM_SERIAL_SEL
 #define CONFIG_MMCROOT			"/dev/mmcblk2p2"  /* SDHC3 */
 
+#define EGF_EVB_MX6
 #define CONFIG_CMD_INIT_EEPROM
 
 #define CONFIG_MX6
@@ -249,7 +249,6 @@
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
 	"g_ether_args=g_cdc.dev_addr=58:05:56:00:04:5e g_cdc.host_addr=58:05:56:00:04:5d\0"\
-	"console=" CONFIG_CONSOLE_DEV "\0" \
 	"fdt_high=0xffffffff\0"	  \
 	"bootargs=console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
 	"initrd_high=0xffffffff\0" \

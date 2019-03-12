@@ -77,9 +77,6 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define PICOS2KHZ(a) (1000000000UL/(a))
 
-#define REV_WID0533_AA0101 "WID0533_AA01.01"
-#define REV_WID0533_AB0101 "WID0533_AB01.01"
-
 static int gf_strcmp(const char * cs, const char * ct) {
 	register signed char __res;
 
@@ -102,6 +99,7 @@ void prepare_boot_env(void)
 	char * egf_sw_id_code;
 	char* mac_address;
 	char fdt_file_name[EGF_FDT_FILE_NAME_LENGTH];
+	u32 uartBase;
 
 	egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
 	fdt_file_name[0] = 0;
@@ -118,8 +116,26 @@ void prepare_boot_env(void)
 	{
 		setenv("ethaddr",mac_address);
 	}
-}
 
+	uartBase = gf_get_debug_uart_base();
+	switch(uartBase){
+	case UART1_BASE:
+		setenv("console","ttymxc0");
+		break;
+	case UART2_BASE:
+		setenv("console","ttymxc1");
+		break;
+	case UART3_BASE:
+		setenv("console","ttymxc2");
+		break;
+	case UART4_BASE:
+		setenv("console","ttymxc3");
+		break;
+	case UART5_BASE:
+		setenv("console","ttymxc4");
+		break;
+	}
+}
 
 #ifdef CONFIG_FSL_ESDHC
 struct fsl_esdhc_cfg usdhc_cfg[2] = {
@@ -1021,36 +1037,39 @@ int board_early_init_f(void)
 	return 0;
 }
 
+int init_board_revision(void)
+{
+	gf_load_board_revision();
+	return 0;
+}
+
 int board_init(void)
 {
 	char * egf_sw_id_code, * board_sw_id_code;
-	int ret;
 
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
 	if (!is_boot_from_usb())
 	{
-		ret = gf_load_som_revision(&egf_sw_id_code,0);
-		if (ret)
+		gf_load_som_revision();
+		egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
+		if (!egf_sw_id_code)
 		{
 			printf("System Hang.\n");
 			while(1);
+		} else {
+			printf("SOM WID: %s\n", egf_sw_id_code);
 		}
-		ret = gf_load_board_revision(&board_sw_id_code);
-		if (ret)
-		{
-			printf("Board EEPROM is not valid\n");
-		}
+	}
 
-		if (board_sw_id_code)
-		{
-			if(!gf_strcmp(board_sw_id_code, REV_WID0533_AB0101))
-			{
-				egf_wid0533ab0101_fix_mux();
-			}
-		}
 
+	board_sw_id_code = gf_eeprom_get_board_sw_id_code();
+	if (board_sw_id_code) {
+		printf("Board WID: %s\n", board_sw_id_code);
+		if (!gf_strcmp(board_sw_id_code, REV_WID0533_AB0101)) {
+			egf_wid0533ab0101_fix_mux();
+		}
 	}
 
 	return 0;
@@ -1391,24 +1410,6 @@ void board_recovery_setup(void)
 #include <spl.h>
 #include <libfdt.h>
 
-/* SW REVISIONS*/
-#define REV_WID0510_AA0101 "WID0510_AA01.01"
-#define REV_WID0510_AB0101 "WID0510_AB01.01"
-#define REV_WID0510_AC0101 "WID0510_AC01.01"
-#define REV_WID0510_AE0101 "WID0510_AE01.01"
-#define REV_WID0510_AD0101 "WID0510_AD01.01"
-#define REV_WID0510_AF0101 "WID0510_AF01.01"
-#define REV_WID0510_AG0101 "WID0510_AG01.01"
-#define REV_WID0510_AJ0101 "WID0510_AJ01.01"
-#define REV_WID0510_AK0101 "WID0510_AK01.01"
-#define REV_WID0510_AC0102 "WID0510_AC01.02"
-#define REV_WID0510_AE0102 "WID0510_AE01.02"
-#define REV_WID0510_AF0102 "WID0510_AF01.02"
-#define REV_WID0510_AG0102 "WID0510_AG01.02"
-#define REV_WID0510_AJ0102 "WID0510_AJ01.02"
-#define REV_WID0510_AK0102 "WID0510_AK01.02"
-#define REV_WID0510_AN0101 "WID0510_AN01.01"
-
 #define MT41K128M16JT_125 		1
 #define MT41K256M16TW_107 		2
 #define K4B4G1646D_BMK0 		3
@@ -1571,117 +1572,86 @@ static struct egf_som the_som_WID_0510_AN0101 = {
 		&mx6sdl_128x16_mmdc_calib_default,
 };
 
-
-int load_revision(void)
+int load_som_revision(void)
 {
-	char * egf_sw_id_code;
-	int ret;
+	char * egf_som_sw_id_code;
 
-	ret = gf_load_som_revision(&egf_sw_id_code,0);
-	if (ret)
+	gf_load_som_revision();
+	egf_som_sw_id_code = gf_eeprom_get_som_sw_id_code();
+	if (!egf_som_sw_id_code)
 	{
 		printf("System Hang.\n");
 		while(1);
  	}
 
-	if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AA0101))
+	printf("SOM WID: %s\n", egf_som_sw_id_code);
+
+	if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AA0101))
 	{
-		/* SW Revision is WID0510_AA01.01 */
-		printf("GF Software ID Code: WID0510_AA01.01\n");
 		memcpy(&the_som, &the_som_WID_0510_AA0101, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AB0101))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AB0101))
 	{
-		/* SW Revision is WID0510_AB01.01 */
-		printf("GF Software ID Code: WID0510_AB01.01\n");
 		memcpy(&the_som, &the_som_WID_0510_AB0101, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AC0101))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AC0101))
 	{
-		/* SW Revision is WID0510_AC01.01 */
-		printf("GF Software ID Code: WID0510_AC01.01\n");
 		memcpy(&the_som, &the_som_WID_0510_AC0101, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AC0102))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AC0102))
 	{
-		/* SW Revision is WID0510_AC01.02 */
-		printf("GF Software ID Code: WID0510_AC01.02\n");
 		memcpy(&the_som, &the_som_WID_0510_AC0102, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AD0101))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AD0101))
 	{
-		/* SW Revision is WID0510_AD01.01 */
-		printf("GF Software ID Code: WID0510_AD01.01\n");
 		memcpy(&the_som, &the_som_WID_0510_AD0101, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AE0101))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AE0101))
 	{
-		/* SW Revision is WID0510_AE01.01 */
-		printf("GF Software ID Code: WID0510_AE01.01\n");
 		memcpy(&the_som, &the_som_WID_0510_AE0101, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AE0102))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AE0102))
 	{
-		/* SW Revision is WID0510_AE01.02 */
-		printf("GF Software ID Code: WID0510_AE01.02\n");
 		memcpy(&the_som, &the_som_WID_0510_AE0102, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AF0101))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AF0101))
 	{
-		/* SW Revision is WID0510_AF01.01 */
-		printf("GF Software ID Code: WID0510_AF01.01\n");
 		memcpy(&the_som, &the_som_WID_0510_AF0101, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AF0102))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AF0102))
 	{
-		/* SW Revision is WID0510_AF01.02 */
-		printf("GF Software ID Code: WID0510_AF01.02\n");
 		memcpy(&the_som, &the_som_WID_0510_AF0102, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AG0101))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AG0101))
 	{
-		/* SW Revision is WID0510_AG01.01 */
-		printf("GF Software ID Code: WID0510_AG01.01\n");
 		memcpy(&the_som, &the_som_WID_0510_AG0101, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AG0102))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AG0102))
 	{
-		/* SW Revision is WID0510_AG01.02 */
-		printf("GF Software ID Code: WID0510_AG01.02\n");
 		memcpy(&the_som, &the_som_WID_0510_AG0102, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AJ0101))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AJ0101))
 	{
-		/* SW Revision is WID0510_AJ01.01 */
-		printf("GF Software ID Code: WID0510_AJ01.01\n");
 		memcpy(&the_som, &the_som_WID_0510_AJ0101, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AJ0102))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AJ0102))
 	{
-		/* SW Revision is WID0510_AJ01.02 */
-		printf("GF Software ID Code: WID0510_AJ01.02\n");
 		memcpy(&the_som, &the_som_WID_0510_AJ0102, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AK0101))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AK0101))
 	{
-		/* SW Revision is WID0510_AK01.01 */
-		printf("GF Software ID Code: WID0510_AK01.01\n");
 		memcpy(&the_som, &the_som_WID_0510_AK0101, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AK0102))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AK0102))
 	{
-		/* SW Revision is WID0510_AK01.02 */
-		printf("GF Software ID Code: WID0510_AK01.02\n");
 		memcpy(&the_som, &the_som_WID_0510_AK0102, sizeof(the_som));
 	}
-	else if(!gf_strcmp(egf_sw_id_code,REV_WID0510_AN0101))
+	else if(!gf_strcmp(egf_som_sw_id_code,REV_WID0510_AN0101))
 	{
-		/* SW Revision is WID0510_AN01.01 */
-		printf("GF Software ID Code: WID0510_AN01.01\n");
 		memcpy(&the_som, &the_som_WID_0510_AN0101, sizeof(the_som));
 	}
 	else {
-		printf("Unrecognized EGF SW ID Code: %s\n",egf_sw_id_code);
+		printf("Unrecognized EGF SW ID Code: %s\n",egf_som_sw_id_code);
 		printf("System Hang.\n");
 		while(1);
 	}
@@ -1846,6 +1816,8 @@ static void fix_clocks(void)
 
 void board_init_f(ulong dummy)
 {
+	char * board_sw_id_code;
+
 	fix_clocks();
 	/* setup AIPS and disable watchdog */
 	arch_cpu_init();
@@ -1859,13 +1831,18 @@ void board_init_f(ulong dummy)
 	/* setup GP timer */
 	timer_init();
 
+	init_board_revision();
+
 	/* UART clocks enabled and gd valid - init serial console */
 	preloader_console_init();
 
 	if (!is_boot_from_usb()) {
 		/* Carica EEPROM */
-		load_revision();
+		load_som_revision();
 	}
+
+	board_sw_id_code = gf_eeprom_get_board_sw_id_code();
+	printf("Board WID: %s\n", board_sw_id_code);
 
 	/* DDR initialization */
 	spl_dram_init();

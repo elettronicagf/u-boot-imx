@@ -15,11 +15,40 @@
 #define SW_ID_LEN 15
 
 #define WID_TABLE_LENGTH 0
-#define WID_PROGRAMMING_TABLE_LENGTH 2
+#define WID_PROGRAMMING_TABLE_LENGTH 23
 
 #define GFCONFIG_SEPARATOR ";"
 
 #define DEBUG_LEVEL 6
+
+/* SOM SW REVISIONS*/
+#define REV_WID0510_AA0101 "WID0510_AA01.01"
+#define REV_WID0510_AB0101 "WID0510_AB01.01"
+#define REV_WID0510_AC0101 "WID0510_AC01.01"
+#define REV_WID0510_AE0101 "WID0510_AE01.01"
+#define REV_WID0510_AD0101 "WID0510_AD01.01"
+#define REV_WID0510_AF0101 "WID0510_AF01.01"
+#define REV_WID0510_AG0101 "WID0510_AG01.01"
+#define REV_WID0510_AJ0101 "WID0510_AJ01.01"
+#define REV_WID0510_AK0101 "WID0510_AK01.01"
+#define REV_WID0510_AC0102 "WID0510_AC01.02"
+#define REV_WID0510_AE0102 "WID0510_AE01.02"
+#define REV_WID0510_AF0102 "WID0510_AF01.02"
+#define REV_WID0510_AG0102 "WID0510_AG01.02"
+#define REV_WID0510_AJ0102 "WID0510_AJ01.02"
+#define REV_WID0510_AK0102 "WID0510_AK01.02"
+#define REV_WID0510_AN0101 "WID0510_AN01.01"
+
+/* KIT SW REVISIONS */
+#define REV_WID0533_AA0101 "WID0533_AA01.01"
+#define REV_WID0533_AB0101 "WID0533_AB01.01"
+#define REV_WID0533_BA0101 "WID0533_BA01.01"
+#define REV_WID0533_BB0101 "WID0533_BB01.01"
+#define REV_WID0533_BB0201 "WID0533_BB02.01"
+#define REV_WID0533_BC0101 "WID0533_BC01.01"
+
+#define WID_REV_PGF0533_A01	"WID0533_A"
+#define WID_REV_PGF0533_A02	"WID0533_B"
 
 #define gf_debug(dbg_level,fmt,args...) \
 	if (dbg_level<=DEBUG_LEVEL) printf(fmt, ##args); \
@@ -63,4 +92,5 @@ void gf_som_eeprom_lock(void);
 int gf_eeprom_read(u8 address,u16 start_address,u8 * buffer,int len);
 int gf_eeprom_write(u8 address,u16 start_address,u8 * buffer,int len);
 int gf_read_programmer_file(const char * file_name,char * file_buffer,int buffer_length);
+
 #endif /* GF_EEPROM_PORT_H_ */

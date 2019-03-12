@@ -14,6 +14,10 @@
 #include <serial.h>
 #include <linux/compiler.h>
 
+#ifdef GF_EEPROM_SERIAL_SEL
+extern u32 gf_get_debug_uart_base(void);
+#endif
+
 /* UART Control Register Bit Fields.*/
 #define  URXD_CHARRDY    (1<<15)
 #define  URXD_ERR        (1<<14)
@@ -108,11 +112,13 @@
 
 #ifndef CONFIG_DM_SERIAL
 
+#ifndef GF_EEPROM_SERIAL_SEL
 #ifndef CONFIG_MXC_UART_BASE
 #error "define CONFIG_MXC_UART_BASE to use the MXC UART driver"
 #endif
+#endif
 
-#define UART_PHYS	CONFIG_MXC_UART_BASE
+u32 __attribute__((section (".data")))  UART_PHYS;
 
 #define __REG(x)     (*((volatile u32 *)(x)))
 
@@ -186,6 +192,11 @@ static int mxc_serial_tstc(void)
  */
 static int mxc_serial_init(void)
 {
+#ifdef GF_EEPROM_SERIAL_SEL
+	UART_PHYS = gf_get_debug_uart_base();
+#else
+	UART_PHYS = CONFIG_MXC_UART_BASE;
+#endif
 	__REG(UART_PHYS + UCR1) = 0x0;
 	__REG(UART_PHYS + UCR2) = 0x0;
 
