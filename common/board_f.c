@@ -91,11 +91,9 @@ __weak void yellow_led_off(void) {}
 __weak void blue_led_on(void) {}
 __weak void blue_led_off(void) {}
 
-#ifdef EGF_EVB_MX6
-__weak int init_board_revision(void){
+__weak int board_preserial_init(void){
 	return 0;
 }
-#endif
 
 /*
  * Why is gd allocated a register? Prior to reloc it might be better to
@@ -879,9 +877,7 @@ static init_fnc_t init_sequence_f[] = {
 	sdram_adjust_866,
 	init_timebase,
 #endif
-#ifdef EGF_EVB_MX6
-	init_board_revision,
-#endif
+	board_preserial_init,
 	init_baud_rate,		/* initialze baudrate settings */
 	serial_init,		/* serial communications setup */
 	console_init_f,		/* stage 1 init of console */

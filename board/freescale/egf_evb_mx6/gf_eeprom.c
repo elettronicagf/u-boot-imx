@@ -237,7 +237,7 @@ char * gf_eeprom_get_board_sw_id_code(void)
 	return get_sw_id_code(&board_eeprom);
 }
 
-static void init_eeprom(struct eeprom* e, u8 busnum, u8 i2caddress, u8 addresslen) {
+static void initialize_eeprom_struct(struct eeprom* e, u8 busnum, u8 i2caddress, u8 addresslen) {
 	e->bus_num = busnum;
 	e->i2c_address = i2caddress;
 	e->protocol.eeprom_id[0] = 0;
@@ -344,6 +344,63 @@ int identify_eeprom_protocol_som(void){
 int identify_eeprom_protocol_board(void){
 	return identify_eeprom_protocol(&board_eeprom);
 }
+
+#ifdef BOARD_WID
+static void setup_default_eeprom_struct(struct eeprom * eep, const char *wid)
+{
+	int i = 0;
+	char * s;
+	u8 cs = 0;
+	char cs_string[3];
+	int n_current_field = 0;
+
+	gf_memset(eep->content,0xFF,sizeof(eep->content));
+	eep->content[0]=0;
+	/* Insert ID and Rev field for target eeprom content */
+	gf_strcat(eep->content,"GF003\n");
+	/* Add SW ID field from configuration info to content */
+	gf_strcat(eep->content,wid);
+	gf_strcat(eep->content,"\n");
+	/* Empty product code */
+	gf_strcat(eep->content,"\n");
+	/* Add the remaining empty fields with the exception of checksum field */
+	for (i = 0; i < eeprom_protocol_GF003.total_fields - 3; i++)
+	{
+		gf_strcat(eep->content,"\n");
+	}
+
+	/* Start computing checksum after GF003 protocol header */
+	s = eep->content + EEPROM_ID_CODE_LEN + EEPROM_PROTOCOL_VERSION_LEN + 1;
+	/* Calculate checksum */
+	for (i = 0; i < eeprom_protocol_GF003.total_fields - 1; i++)
+	{
+		while (*s != '\n') {
+			cs = cs + *(unsigned char*) s;
+			s++;
+		}
+		s++;
+	}
+	cs = cs & 0XFF;
+	/* Convert checksum to string */
+	gf_u8tox(cs,cs_string);
+	/* Append checksum to eeprom content */
+	gf_strcat(eep->content,cs_string);
+	gf_strcat(eep->content,"\n");
+
+	eep->status = EEPROM_PROGRAMMED;
+	eep->protocol = eeprom_protocol_GF003;
+
+	for (int ch_pos = 0; (ch_pos < sizeof(eep->content)) && ((n_current_field < eep->protocol.total_fields + 1)); ch_pos++) {
+		if (eep->content[ch_pos] == '\n') {
+			eep->content[ch_pos] = 0;
+			if (n_current_field != eep->protocol.total_fields)
+				eep->fields[n_current_field] = &eep->content[ch_pos + 1];
+			n_current_field = n_current_field + 1;
+			eep->len = ch_pos;
+		}
+	}
+}
+#endif
 
 static void gf_program_eeprom(struct eeprom* eep,struct gf_config *config){
 	char content[EEPROM_SPACE_USED];
@@ -607,18 +664,7 @@ void load_board_eeprom(void)
 	load_eeprom(&board_eeprom);
 }
 
-void init_gf_som_eeprom(void)
-{
-	/* Prepare SOM eeprom structure */
-	init_eeprom(&som_eeprom, SOM_EEPROM_I2C_BUS_NO, SOM_EEPROM_I2C_ADDRESS, 2);
-}
-void init_gf_board_eeprom(void)
-{
-	/* Prepare SOM eeprom structure */
-	init_eeprom(&board_eeprom, BOARD_EEPROM_I2C_BUS_NO, BOARD_EEPROM_I2C_ADDRESS, 2);
-}
-
-void gf_load_som_revision(void)
+void gf_init_som_eeprom(void)
 {
 	int som_eeprom_hw_status;
 	int som_eeprom_protocol;
@@ -630,7 +676,8 @@ void gf_load_som_revision(void)
 
 	gf_debug(0,"Eeprom GF module version: %s\n",GF_EEPROM_SW_VERSION);
 	gf_i2c_init();
-	init_gf_som_eeprom();
+	/* Prepare SOM eeprom structure */
+	initialize_eeprom_struct(&som_eeprom, SOM_EEPROM_I2C_BUS_NO, SOM_EEPROM_I2C_ADDRESS, 2);
 	/* Detect SOM eeprom */
 	som_eeprom_hw_status = check_eeprom_hw_som();
 	if (som_eeprom_hw_status == EEPROM_NOT_FOUND)
@@ -726,13 +773,19 @@ void gf_load_som_revision(void)
 
 }
 
-void gf_load_board_revision(void)
+void gf_init_board_eeprom(void)
 {
+#ifdef BOARD_WID
+	initialize_eeprom_struct(&board_eeprom, BOARD_EEPROM_I2C_BUS_NO, BOARD_EEPROM_I2C_ADDRESS, 2);
+	setup_default_eeprom_struct(&board_eeprom, BOARD_WID);
+	return;
+#else
 	int board_eeprom_hw_status;
 	int board_eeprom_protocol;
 	int eeprom_is_empty;
 
-	init_gf_board_eeprom();
+	/* Prepare SOM eeprom structure */
+	initialize_eeprom_struct(&board_eeprom, BOARD_EEPROM_I2C_BUS_NO, BOARD_EEPROM_I2C_ADDRESS, 2);
 	/* Detect board eeprom */
 	board_eeprom_hw_status = check_eeprom_hw_board();
 	if (board_eeprom_hw_status == EEPROM_NOT_FOUND)
@@ -767,6 +820,7 @@ void gf_load_board_revision(void)
 		}
 	}
 	return;
+#endif
 }
 
 
@@ -779,7 +833,8 @@ int reset_gf_som_eeprom_content(char* egf_sw_id_code, int ask_confirmation)
 
 	gf_debug(0,"Eeprom GF module version: %s\n",GF_EEPROM_SW_VERSION);
 	gf_i2c_init();
-	init_gf_som_eeprom();
+	/* Prepare SOM eeprom structure */
+	initialize_eeprom_struct(&som_eeprom, SOM_EEPROM_I2C_BUS_NO, SOM_EEPROM_I2C_ADDRESS, 2);
 	/* Detect SOM eeprom */
 	som_eeprom_hw_status = check_eeprom_hw_som();
 	if (som_eeprom_hw_status == EEPROM_NOT_FOUND)

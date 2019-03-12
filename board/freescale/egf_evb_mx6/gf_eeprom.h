@@ -56,13 +56,11 @@ void program_board_eeprom(struct gf_config *config);
 void upgrade_som_eeprom_to_latest_version(void);
 void upgrade_board_eeprom_to_latest_version(void);
 
-void init_gf_som_eeprom(void);
-void init_gf_board_eeprom(void);
 void load_som_eeprom(void);
 void load_board_eeprom(void);
 
-void gf_load_som_revision(void);
-void gf_load_board_revision(void);
+void gf_init_som_eeprom(void);
+void gf_init_board_eeprom(void);
 int reset_gf_som_eeprom_content(char* egf_sw_id_code, int ask_confirmation);
 u32 gf_get_debug_uart_base(void);
 #endif /* GF_EEPROM_H_ */

@@ -1037,9 +1037,9 @@ int board_early_init_f(void)
 	return 0;
 }
 
-int init_board_revision(void)
+int board_preserial_init(void)
 {
-	gf_load_board_revision();
+	gf_init_board_eeprom();
 	return 0;
 }
 
@@ -1052,7 +1052,7 @@ int board_init(void)
 
 	if (!is_boot_from_usb())
 	{
-		gf_load_som_revision();
+		gf_init_som_eeprom();
 		egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
 		if (!egf_sw_id_code)
 		{
@@ -1576,7 +1576,7 @@ int load_som_revision(void)
 {
 	char * egf_som_sw_id_code;
 
-	gf_load_som_revision();
+	gf_init_som_eeprom();
 	egf_som_sw_id_code = gf_eeprom_get_som_sw_id_code();
 	if (!egf_som_sw_id_code)
 	{
@@ -1831,7 +1831,7 @@ void board_init_f(ulong dummy)
 	/* setup GP timer */
 	timer_init();
 
-	init_board_revision();
+	board_preserial_init();
 
 	/* UART clocks enabled and gd valid - init serial console */
 	preloader_console_init();

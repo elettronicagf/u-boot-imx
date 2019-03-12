@@ -38,7 +38,6 @@ struct wid_list_for_eeprom_programming wid_list[] = {
 	{"JSM0510_PD1", REV_WID0510_AK0102},
 	{"JSM0510_PF1.Beta1", REV_WID0510_AK0102},
 	{"JSM0510_S01", REV_WID0510_AN0101},
-
 };
 
 void *gf_memset(void *s, int c, size_t n)
