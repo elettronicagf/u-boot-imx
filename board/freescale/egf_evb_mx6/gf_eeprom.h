@@ -62,5 +62,6 @@ void load_board_eeprom(void);
 void gf_init_som_eeprom(void);
 void gf_init_board_eeprom(void);
 int reset_gf_som_eeprom_content(char* egf_sw_id_code, int ask_confirmation);
+u32 gf_get_pcb_rev(void);
 u32 gf_get_debug_uart_base(void);
 #endif /* GF_EEPROM_H_ */

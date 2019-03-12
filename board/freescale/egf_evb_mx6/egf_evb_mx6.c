@@ -1018,11 +1018,11 @@ static void setup_power_management(void){
 int board_early_init_f(void)
 {
 	if (is_boot_from_usb()) {
-		egf_board_mux_init(PROGRAMMER_MUX_MODE);
+		egf_board_common_mux_init(PROGRAMMER_MUX_MODE);
 		printf("Is boot from usb! \n");
 	}
 	else {
-		egf_board_mux_init(APPLICATION_MUX_MODE);
+		egf_board_common_mux_init(APPLICATION_MUX_MODE);
 		printf("Is boot from usb! \n");
 	}
 	setup_power_management();
@@ -1039,7 +1039,24 @@ int board_early_init_f(void)
 
 int board_preserial_init(void)
 {
+	int pcb_rev;
+	char * board_sw_id_code;
 	gf_init_board_eeprom();
+
+	pcb_rev = gf_get_pcb_rev();
+	board_sw_id_code = gf_eeprom_get_board_sw_id_code();
+
+	if (pcb_rev == PCB_REV_PGF0533_A02) {
+		pgf_0533_a02_mux();
+		if (!gf_strcmp(board_sw_id_code, REV_WID0533_BC0101)) {
+			egf_wid0533bc0101_mux();
+		}
+	} else if(pcb_rev == PCB_REV_PGF0533_A01) {
+		if (!gf_strcmp(board_sw_id_code, REV_WID0533_AB0101)) {
+			egf_wid0533ab0101_mux();
+		}
+	}
+
 	return 0;
 }
 
@@ -1063,13 +1080,9 @@ int board_init(void)
 		}
 	}
 
-
 	board_sw_id_code = gf_eeprom_get_board_sw_id_code();
 	if (board_sw_id_code) {
 		printf("Board WID: %s\n", board_sw_id_code);
-		if (!gf_strcmp(board_sw_id_code, REV_WID0533_AB0101)) {
-			egf_wid0533ab0101_fix_mux();
-		}
 	}
 
 	return 0;

@@ -50,6 +50,11 @@
 #define WID_REV_PGF0533_A01	"WID0533_A"
 #define WID_REV_PGF0533_A02	"WID0533_B"
 
+#define PCB_REV_PGF0533_A01	1
+#define PCB_REV_PGF0533_A02	2
+#define PCB_REV_UNKNOWN		3
+#define PCB_REV_NOT_PROGRAMMED 4
+
 #define gf_debug(dbg_level,fmt,args...) \
 	if (dbg_level<=DEBUG_LEVEL) printf(fmt, ##args); \
 	else (void)0
