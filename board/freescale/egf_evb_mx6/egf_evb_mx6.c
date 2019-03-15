@@ -1936,7 +1936,8 @@ void board_init_f(ulong dummy)
 	}
 
 	board_sw_id_code = gf_eeprom_get_board_sw_id_code();
-	printf("Board WID: %s\n", board_sw_id_code);
+	if(board_sw_id_code)
+		printf("Board WID: %s\n", board_sw_id_code);
 
 	/* DDR initialization */
 	spl_dram_init();
