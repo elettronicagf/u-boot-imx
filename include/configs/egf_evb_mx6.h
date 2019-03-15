@@ -275,6 +275,7 @@
 				"fdt rm EGF_BLC1133; " \
 				"fdt rm EGF_BLC1168; " \
 				"fdt rm EGF_BLC1173; " \
+				"fdt set lvds_channel1 status \"okay\"; " \
 				"fdt rm ft5x06; " \
 				"fdt rm ar1020; " \
 				"fdt rm tsc2046; " \
@@ -290,6 +291,7 @@
 				"fdt rm EGF_BLC1168; " \
 				"fdt rm EGF_BLC1173; " \
 				"fdt rm EGF_BLC1167; " \
+				"fdt set lvds_channel1 status \"okay\"; " \
 				"fdt rm ar1020; " \
 				"fdt rm tsc2046; " \
 				"fdt set backlight2 status \"okay\"; " \
@@ -336,6 +338,7 @@
 				"fdt rm EGF_BLC1133; " \
 				"fdt rm EGF_BLC1173; " \
 				"fdt rm EGF_BLC1167; " \
+				"fdt set lvds_channel1 status \"okay\"; " \
 				"fdt rm ar1020; " \
 				"fdt rm tsc2046; " \
 				"fdt set backlight3 status \"okay\"; " \
@@ -345,6 +348,7 @@
 				"fdt rm EGF_BLC1133; " \
 				"fdt rm EGF_BLC1173; " \
 				"fdt rm EGF_BLC1168; " \
+				"fdt set lvds_channel1 status \"okay\"; " \
 				"fdt rm ar1020; " \
 				"fdt rm ft5x06; " \
 				"fdt set tsc2046 ti,x-plate-ohms [02 b2]; " \
@@ -356,6 +360,7 @@
 				"fdt rm EGF_BLC1133; " \
 				"fdt rm EGF_BLC1168; " \
 				"fdt rm EGF_BLC1167; " \
+				"fdt set lvds_channel1 status \"okay\"; " \
 				"fdt rm ar1020; " \
 				"fdt rm tsc2046; " \
 				"fdt set backlight3 status \"okay\"; " \
@@ -407,9 +412,29 @@
 			"i2c dev 2; " \
 			"if i2c probe 0x50 ; then " \
 				"echo \"------ have HDMI monitor\";" \
+				"fdt rm lvds_channel2 primary; " \
 			"else " \
 				"echo \"------ No HDMI monitor\";" \
 				"fdt rm mxcfb1; " \
+				"fdt rm hdmi_core; " \
+				"fdt rm hdmi_video; " \
+				"fdt rm hdmi_cec; " \
+				"fdt rm hdmi_audio; " \
+				"if test \"${pcb_rev}\" = \"PGF0533_A02\"; then " \
+					"fdt set mxcfb2 status \"okay\"; " \
+					"fdt set lvds_channel2 status \"okay\"; " \
+					"fdt get value lvds1stat lvds_channel1 status; " \
+					"if test \"${lvds1stat}\" = \"disabled\"; then " \
+						"fdt rm lvds_channel1 primary; " \
+					"else " \
+						"fdt rm lvds_channel2 primary; " \
+					"fi; " \
+					"fdt set panel5 status \"okay\"; " \
+					"gpio set 176; " \
+					"fdt set backlight1 status \"okay\"; " \
+				"else " \
+					"fdt rm lvds_channel2 primary; " \
+				"fi; " \
 			"fi;\0" \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
 	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel}\0" \
