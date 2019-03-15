@@ -334,6 +334,14 @@ static void my_emmc_init_mux(void)
 	SETUP_IOMUX_PADS(mx6_usdhc3_pads);
 }
 
+static iomux_v3_cfg_t const wd_pads[] = {
+	IOMUX_PADS(PAD_GPIO_1__WDOG2_B  	| MUX_PAD_CTRL(NO_PAD_CTRL)),
+};
+
+static void my_wd_init_mux(void)
+{
+	SETUP_IOMUX_PADS(wd_pads);
+}
 
 /* microSD
  *
@@ -653,6 +661,8 @@ void pgf_0533_a02_mux(void)
 	SETUP_IOMUX_PAD(PAD_EIM_DA1__GPIO3_IO01 | DIO_PAD_PDOWN_CFG); //UART2-RS232-RS485-MODE
 	SETUP_IOMUX_PAD(PAD_EIM_DA2__GPIO3_IO02 | DIO_PAD_PDOWN_CFG); //UART2-RS485-ECHO
 	SETUP_IOMUX_PAD(PAD_EIM_DA3__GPIO3_IO03 | DIO_PUP_PAD_CFG);   //UART2-SLEW
+
+	my_wd_init_mux();
 
 	// Configure UART2 as active, RS232, high baudrate
 	gpio_direction_output(IMX_GPIO_NR(2,16), 1); // UART2-SHDN = 1

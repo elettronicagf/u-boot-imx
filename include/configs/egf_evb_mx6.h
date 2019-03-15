@@ -262,6 +262,8 @@
 	"fix_dt=fdt addr ${fdt_addr}; " \
 			"if test \"${pcb_rev}\" = \"PGF0533_A01\"; then " \
 				"fdt rm rtc_pcf85063a; " \
+				"fdt set wdog1 status \"okay\"; " \
+				"fdt set wdog2 status \"disabled\"; " \
 			"elif test \"${pcb_rev}\" = \"PGF0533_A02\"; then " \
 				"fdt rm rtc_mcp7941x; " \
 				"fdt rm rtc_mcp7941x_eeprom; " \
