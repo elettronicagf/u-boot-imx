@@ -710,8 +710,10 @@ int console_init_f(void)
 	gd->have_console = 1;
 
 #ifdef CONFIG_SILENT_CONSOLE
-	if (getenv("silent") != NULL)
+	if (getenv("silent") != NULL) {
 		gd->flags |= GD_FLG_SILENT;
+		gd->flags |= GD_FLG_DISABLE_CONSOLE;
+	}
 #endif
 
 	print_pre_console_buffer(PRE_CONSOLE_FLUSHPOINT1_SERIAL);
