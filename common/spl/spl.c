@@ -285,7 +285,10 @@ void preloader_console_init(void)
 
 	serial_init();		/* serial communications setup */
 
-	gd->have_console = 1;
+	if(gd->flags & GD_FLG_SILENT)
+		gd->have_console = 0;
+	else
+		gd->have_console = 1;
 
 	puts("\nU-Boot SPL " PLAIN_VERSION " (" U_BOOT_DATE " - " \
 			U_BOOT_TIME ")\n");

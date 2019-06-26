@@ -884,7 +884,9 @@ u32 gf_get_pcb_rev(void)
 
 	egf_board_sw_id_code = gf_eeprom_get_board_sw_id_code();
 	if(egf_board_sw_id_code) {
-		if (!gf_strncmp(egf_board_sw_id_code, WID_REV_PGF0533_A02, sizeof(WID_REV_PGF0533_A02)-1))
+		if (!gf_strncmp(egf_board_sw_id_code, WID_REV_PGF0533_A03, sizeof(WID_REV_PGF0533_A03)-1))
+			return PCB_REV_PGF0533_A03;
+		else if (!gf_strncmp(egf_board_sw_id_code, WID_REV_PGF0533_A02, sizeof(WID_REV_PGF0533_A02)-1))
 			return PCB_REV_PGF0533_A02;
 		else if (!gf_strncmp(egf_board_sw_id_code, WID_REV_PGF0533_A01, sizeof(WID_REV_PGF0533_A01)-1))
 			return PCB_REV_PGF0533_A01;
@@ -892,34 +894,4 @@ u32 gf_get_pcb_rev(void)
 			return PCB_REV_UNKNOWN;
 	}
 	return PCB_REV_NOT_PROGRAMMED;
-}
-
-u32 gf_get_debug_uart_base(void)
-{
-	u32 pcb_rev;
-	int ret;
-
-	pcb_rev = gf_get_pcb_rev();
-
-	if (pcb_rev == PCB_REV_PGF0533_A01) {
-		/* Board is based on PGF0533_A01. Debug UART is UART2 */
-		return UART2_BASE;
-	} else if (pcb_rev == PCB_REV_PGF0533_A02) {
-		/* Board is based on PGF0533_A02. Debug UART is UART1 */
-		return UART1_BASE;
-	} else if (pcb_rev == PCB_REV_UNKNOWN) {
-			/* Unknown Board Revision. Default to UART1 */
-		return UART1_BASE;
-	} else {
-		/* Board EEPROM is not programmed. Try to guess board revision */
-		gpio_direction_input(IMX_GPIO_NR(1,4));
-		ret = gpio_get_value(IMX_GPIO_NR(1,4));
-		if (ret == 0){
-			/* On PGF0533_A02 there is a 10k pulldown on GPIO1-IO04 */
-			return UART1_BASE;
-		} else {
-			/* On PGF0533_A01 there is a 10k pullup on GPIO1-IO04 */
-			return UART2_BASE;
-		}
-	}
 }

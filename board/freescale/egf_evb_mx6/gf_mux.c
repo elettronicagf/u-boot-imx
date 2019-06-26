@@ -673,6 +673,12 @@ void pgf_0533_a02_mux(void)
 
 }
 
+void pgf_0533_a03_mux(void)
+{
+	pgf_0533_a02_mux();
+	SETUP_IOMUX_PAD(PAD_EIM_A17__GPIO2_IO21	| DIO_PUP_PAD_CFG); // DEBUG_UART_EN - GPIO 53
+}
+
 void egf_board_common_mux_init(int mode)
 {
 	switch(mode){

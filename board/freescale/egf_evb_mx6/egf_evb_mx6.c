@@ -76,8 +76,52 @@ DECLARE_GLOBAL_DATA_PTR;
 #define DISP1_BKL_PWM_GPIO		IMX_GPIO_NR(1, 9)
 #define DISP1_BKL_PWR_EN_GPIO	IMX_GPIO_NR(3, 14)
 #define DISP1_LVDS_GPIO			IMX_GPIO_NR(5, 18)
+#define DEBUG_UART_EN			IMX_GPIO_NR(2, 21)
 
 #define PICOS2KHZ(a) (1000000000UL/(a))
+
+//returns 0 if no console has to be enabled
+u32 gf_get_debug_uart_base(void)
+{
+	u32 pcb_rev;
+	int ret;
+
+	pcb_rev = gf_get_pcb_rev();
+
+	if (pcb_rev == PCB_REV_PGF0533_A01) {
+		/* Board is based on PGF0533_A01. Debug UART is UART2 */
+		return UART2_BASE;
+	} else if (pcb_rev == PCB_REV_PGF0533_A02) {
+		/* Board is based on PGF0533_A02. Debug UART is UART1 */
+		return UART1_BASE;
+	} else if (pcb_rev == PCB_REV_PGF0533_A03) {
+		/* Board is based on PGF0533_A03. Debug UART is UART1 if J3 is not closed */
+		gpio_direction_input(DEBUG_UART_EN);
+		ret = gpio_get_value(DEBUG_UART_EN);
+		//in programmazione sempre abilitata la seriale
+		if (is_boot_from_usb())
+			return UART1_BASE;
+
+		if(ret == 0) //J3 closed
+			return 0;
+		else
+			return UART1_BASE;
+	} else if (pcb_rev == PCB_REV_UNKNOWN) {
+			/* Unknown Board Revision. Default to UART1 */
+		return UART1_BASE;
+	} else {
+		/* Board EEPROM is not programmed. Try to guess board revision */
+		gpio_direction_input(IMX_GPIO_NR(1,4));
+		ret = gpio_get_value(IMX_GPIO_NR(1,4));
+		if (ret == 0){
+			/* On PGF0533_A02 there is a 10k pulldown on GPIO1-IO04 */
+			return UART1_BASE;
+		} else {
+			/* On PGF0533_A01 there is a 10k pullup on GPIO1-IO04 */
+			return UART2_BASE;
+		}
+	}
+}
 
 static int gf_strcmp(const char * cs, const char * ct) {
 	register signed char __res;
@@ -138,6 +182,10 @@ void prepare_boot_env(void)
 	case UART5_BASE:
 		setenv("console","ttymxc4");
 		break;
+	default:
+		setenv("console","null");
+		setenv("silent","1");
+		break;
 	}
 
 	pcb_rev = gf_get_pcb_rev();
@@ -147,6 +195,9 @@ void prepare_boot_env(void)
 		break;
 	case PCB_REV_PGF0533_A02:
 		setenv("pcb_rev", "PGF0533_A02");
+		break;
+	case PCB_REV_PGF0533_A03:
+		setenv("pcb_rev", "PGF0533_A03");
 		break;
 	default:
 		setenv("pcb_rev", "");
@@ -441,7 +492,8 @@ static void lvds_disp_enable(struct display_info_t const *dev)
 	int pcb_rev;
 	pcb_rev = gf_get_pcb_rev();
 
-	if (pcb_rev == PCB_REV_PGF0533_A02)
+	if (pcb_rev == PCB_REV_PGF0533_A02 ||
+		pcb_rev == PCB_REV_PGF0533_A03    )
 		lvds_disp_enable_pgf0533_a02(dev);
 	else
 		lvds_disp_enable_pgf0533_a01(dev);
@@ -1127,7 +1179,13 @@ int board_preserial_init(void)
 	pcb_rev = gf_get_pcb_rev();
 	board_sw_id_code = gf_eeprom_get_board_sw_id_code();
 
-	if (pcb_rev == PCB_REV_PGF0533_A02) {
+	if (pcb_rev == PCB_REV_PGF0533_A03) {
+		pgf_0533_a03_mux();
+		if (!gf_strcmp(board_sw_id_code, REV_WID0533_BC0101)) {
+			egf_wid0533bc0101_mux();
+		}
+	}
+	else if (pcb_rev == PCB_REV_PGF0533_A02) {
 		pgf_0533_a02_mux();
 		if (!gf_strcmp(board_sw_id_code, REV_WID0533_BC0101)) {
 			egf_wid0533bc0101_mux();

@@ -67,6 +67,11 @@
 #define CONFIG_BOARD_LATE_INIT
 #define CONFIG_MXC_GPIO
 
+/* disable console output */
+#define CONFIG_SILENT_CONSOLE
+#define CONFIG_SYS_DEVICE_NULLDEV
+#define CONFIG_SILENT_CONSOLE_UPDATE_ON_SET
+
 #define CONFIG_MXC_UART
 
 #define CONFIG_CMD_GPIO

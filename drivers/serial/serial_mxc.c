@@ -194,9 +194,15 @@ static int mxc_serial_init(void)
 {
 #ifdef GF_EEPROM_SERIAL_SEL
 	UART_PHYS = gf_get_debug_uart_base();
+	if(UART_PHYS==0) {
+		UART_PHYS = UART1_BASE;
+		gd->flags |= GD_FLG_SILENT;
+	}
+
 #else
 	UART_PHYS = CONFIG_MXC_UART_BASE;
 #endif
+
 	__REG(UART_PHYS + UCR1) = 0x0;
 	__REG(UART_PHYS + UCR2) = 0x0;
 
