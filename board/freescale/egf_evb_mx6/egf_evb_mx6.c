@@ -1191,6 +1191,7 @@ int board_preserial_init(void)
 			egf_wid0533bc0101_mux();
 		}
 	} else if(pcb_rev == PCB_REV_PGF0533_A01) {
+		pgf_0533_a01_mux();
 		if (!gf_strcmp(board_sw_id_code, REV_WID0533_AB0101)) {
 			egf_wid0533ab0101_mux();
 		}

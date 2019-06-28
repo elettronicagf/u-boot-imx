@@ -4,6 +4,7 @@
 #define APPLICATION_MUX_MODE	 2
 
 void egf_board_common_mux_init(int mode);
+void pgf_0533_a01_mux(void);
 void pgf_0533_a02_mux(void);
 void pgf_0533_a03_mux(void);
 void egf_wid0533ab0101_mux(void);
