@@ -257,7 +257,7 @@
 	"ip_dyn=yes\0" \
 	"g_ether_args=g_cdc.dev_addr=58:05:56:00:04:5e g_cdc.host_addr=58:05:56:00:04:5d\0"\
 	"fdt_high=0xffffffff\0"	  \
-	"bootargs=console=${console},${baudrate} ${smp} ${g_ether_args}\0" \
+	"set_bootargs_base=setenv bootargs_base console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel} pcb_rev=${pcb_rev}\0" \
 	"initrd_high=0xffffffff\0" \
 	"audio=1\0 " \
 	"mmcautodetect=yes\0" \
@@ -445,9 +445,10 @@
 				"else " \
 					"fdt rm lvds_channel2 primary; " \
 				"fi; " \
-			"fi;\0" \
+			"fi;" \
+			"run set_bootargs_base;\0" \
 	"smp=" CONFIG_SYS_NOSMP "\0"\
-	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel}\0" \
+	"sdargs=setenv bootargs ${bootargs_base} \0" \
 	"loadimage_sd=fatload mmc 0:1 ${loadaddr} ${image}\0" \
 	"loadfdt_sd=fatload mmc 0:1 ${fdt_addr} ${fdt_file}\0" \
 	"loadsplash_sd=fatload mmc 0:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
@@ -461,14 +462,14 @@
 					"echo Booting from SD Card;" \
 					"setenv sdargs ${sdargs} root=/dev/mmcblk0p2 rootwait rw; " \
 				"fi; " \
+				"run fix_dt; " \
 				"run sdargs; " \
 				"run loadsplash_sd; " \
 				"echo ${bootargs}; " \
-				"run fix_dt; " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"fi; " \
 		"fi;\0 " \
-	"emmcargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} root=/dev/mmcblk2p2 rootwait rw panel=${panel}\0" \
+	"emmcargs=setenv bootargs ${bootargs_base} root=/dev/mmcblk2p2 rootwait rw \0" \
 	"loadimage_emmc=fatload mmc 1:1 ${loadaddr} ${image}\0" \
 	"loadfdt_emmc=fatload mmc 1:1 ${fdt_addr} ${fdt_file}\0" \
 	"loadsplash_emmc=fatload mmc 1:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
@@ -477,16 +478,16 @@
 		"if run loadfdt_emmc; then " \
 			"if run loadimage_emmc; then " \
 				"echo Booting from eMMC Card; " \
+				"run fix_dt; " \
 				"run emmcargs; " \
 				"run loadsplash_emmc;" \
 				"echo ${bootargs}; " \
-				"run fix_dt; " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"fi; " \
 		"fi;\0 " \
 	"loadfdt_usb=fatload usb 0 ${fdt_addr} ${fdt_file}\0" \
 	"loadimage_usb=fatload usb 0 ${loadaddr} ${image}\0" \
-	"usbargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel}\0" \
+	"usbargs=setenv bootargs ${bootargs_base} \0" \
 	"usbboot=echo Try Booting from USB...;" \
 		"usb start;" \
 		"if run loadfdt_usb; then " \
@@ -498,13 +499,12 @@
 					"setenv usbargs ${usbargs} root=/dev/sda2 rootwait rw; " \
 				"fi;" \
 				"fatload usb 0 0x10000000 /logo.bmp;bmp d 0x10000000;" \
-				"run usbargs; " \
 				"run fix_dt; " \
+				"run usbargs; " \
 				"bootz ${loadaddr} - ${fdt_addr};" \
 			"fi; " \
 		"fi;\0 " \
-	"bootargs_sata=setenv bootargs console=${console},${baudrate} ${smp} " \
-			"root=/dev/sda1 rootwait rw \0" \
+	"bootargs_sata=setenv bootargs ${bootargs_base} root=/dev/sda1 rootwait rw \0" \
 	"bootcmd_sata=echo Booting from sata ...; " \
 			"run bootargs_sata; sata init; " \
 			"sata read ${loadaddr} 0x800  0x4000; " \
