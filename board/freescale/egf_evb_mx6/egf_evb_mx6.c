@@ -208,7 +208,8 @@ void prepare_boot_env(void)
 	if (board_sw_id_code)
 	{
 		if((!gf_strcmp(board_sw_id_code, REV_WID0533_AB0101)) ||
-		  (!gf_strcmp(board_sw_id_code, REV_WID0533_BC0101)))
+		  (!gf_strcmp(board_sw_id_code, REV_WID0533_BC0101)) ||
+		  (!gf_strcmp(board_sw_id_code, REV_WID0533_CC0101)))
 			setenv("audio", "0");
 	}
 
@@ -775,32 +776,38 @@ int board_video_skip(void)
 				strcpy(panel, "EGF_BLC1133");
 				setenv("panel", panel);
 			}
-			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BA0101))
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BA0101) ||
+					!gf_strcmp(board_sw_id_code, REV_WID0533_CA0101))
 			{
 				strcpy(panel, "EGF_BLC1168");
 				setenv("panel", panel);
 			}
-			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BA0201))
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BA0201) ||
+					!gf_strcmp(board_sw_id_code, REV_WID0533_CA0201))
 			{
 				strcpy(panel, "EGF_BLC1167");
 				setenv("panel", panel);
 			}
-			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BB0101))
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BB0101) ||
+					!gf_strcmp(board_sw_id_code, REV_WID0533_CB0101))
 			{
 				strcpy(panel, "EGF_BLC1149");
 				setenv("panel", panel);
 			}
-			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BB0201))
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BB0201) ||
+					!gf_strcmp(board_sw_id_code, REV_WID0533_CB0201))
 			{
 				strcpy(panel, "EGF_BLC1172");
 				setenv("panel", panel);
 			}
-			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BB0301))
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BB0301) ||
+					!gf_strcmp(board_sw_id_code, REV_WID0533_CB0301))
 			{
 				strcpy(panel, "EGF_BLC1152");
 				setenv("panel", panel);
 			}
-			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BC0101))
+			else if(!gf_strcmp(board_sw_id_code, REV_WID0533_BC0101) ||
+					!gf_strcmp(board_sw_id_code, REV_WID0533_CC0101))
 			{
 				strcpy(panel, "EGF_BLC1173");
 				setenv("panel", panel);
@@ -1181,7 +1188,7 @@ int board_preserial_init(void)
 
 	if (pcb_rev == PCB_REV_PGF0533_A03) {
 		pgf_0533_a03_mux();
-		if (!gf_strcmp(board_sw_id_code, REV_WID0533_BC0101)) {
+		if (!gf_strcmp(board_sw_id_code, REV_WID0533_CC0101)) {
 			egf_wid0533bc0101_mux();
 		}
 	}
