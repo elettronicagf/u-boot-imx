@@ -67,6 +67,11 @@ DECLARE_GLOBAL_DATA_PTR;
 #define PWR_5V0_EN_3V3_GPIO		IMX_GPIO_NR(1,3)
 #define VIO_3V3_EN				IMX_GPIO_NR(6,14)
 
+/* wifi ATLWIL3000 gpios */
+#define WIFI_ATLWIL3000_RESET	IMX_GPIO_NR(5,21) //WMD_CHIP_EN only PGF0533_A03
+#define WIFI_ATLWIL3000_CHIPEN	IMX_GPIO_NR(2,22) //WMD_RESETN  only PGF0533_A03
+#define RTC_CLKOE				IMX_GPIO_NR(1,4)
+
 #define I2C_PMIC	1
 
 #define DISP0_EN				IMX_GPIO_NR(6, 16)
@@ -1145,6 +1150,14 @@ int board_spi_cs_gpio(unsigned bus, unsigned cs)
 }
 #endif
 
+static void setup_wifi_ATWIL3000(void ){
+	gpio_direction_output(RTC_CLKOE, 1);
+	gpio_direction_output(WIFI_ATLWIL3000_RESET, 0);
+	gpio_direction_output(WIFI_ATLWIL3000_CHIPEN, 1);
+	mdelay(5);
+	gpio_direction_output(WIFI_ATLWIL3000_RESET, 1);
+}
+
 static void setup_eeprom(void){
 	/* Set EEPROM write protected */
 	gpio_direction_output(EEPROM_nWP_GPIO,0);
@@ -1191,6 +1204,7 @@ int board_preserial_init(void)
 		if (!gf_strcmp(board_sw_id_code, REV_WID0533_CC0101)) {
 			egf_wid0533bc0101_mux();
 		}
+		setup_wifi_ATWIL3000();
 	}
 	else if (pcb_rev == PCB_REV_PGF0533_A02) {
 		pgf_0533_a02_mux();
