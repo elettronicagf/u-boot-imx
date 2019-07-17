@@ -471,7 +471,7 @@
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"fi; " \
 		"fi;\0 " \
-	"emmcargs=setenv bootargs ${bootargs_base} root=/dev/mmcblk2p2 rootwait rw \0" \
+	"emmcargs=setenv bootargs ${bootargs_base} root=/dev/mmcblk2p2 rootfstype=ext4 rootwait rw \0" \
 	"loadimage_emmc=fatload mmc 1:1 ${loadaddr} ${image}\0" \
 	"loadfdt_emmc=fatload mmc 1:1 ${fdt_addr} ${fdt_file}\0" \
 	"loadsplash_emmc=fatload mmc 1:1 0x10000000 logo.bmp;bmp d 0x10000000;\0" \
