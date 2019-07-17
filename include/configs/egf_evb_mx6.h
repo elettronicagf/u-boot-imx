@@ -276,6 +276,7 @@
 				"fdt rm rtc_mcp7941x; " \
 				"fdt rm rtc_mcp7941x_eeprom; " \
 			"elif test \"${pcb_rev}\" = \"PGF0533_A03\"; then " \
+			    "fdt rm reg_wlan_tiwi; " \
 				"fdt rm wifi_tiwi_sdio; " \
 				"fdt rm rtc_mcp7941x; " \
 				"fdt rm rtc_mcp7941x_eeprom; " \
