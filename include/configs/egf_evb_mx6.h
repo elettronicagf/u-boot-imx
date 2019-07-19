@@ -433,7 +433,9 @@
 				"fdt rm hdmi_video; " \
 				"fdt rm hdmi_cec; " \
 				"fdt rm hdmi_audio; " \
-				"if test \"${pcb_rev}\" = \"PGF0533_A02\"; then " \
+				"if test \"${pcb_rev}\" = \"PGF0533_A01\"; then " \
+					"fdt rm lvds_channel2 primary; " \
+				"else " \
 					"fdt set mxcfb2 status \"okay\"; " \
 					"fdt set lvds_channel2 status \"okay\"; " \
 					"fdt get value lvds1stat lvds_channel1 status; " \
@@ -445,8 +447,6 @@
 					"fdt set panel5 status \"okay\"; " \
 					"gpio set 176; " \
 					"fdt set backlight1 status \"okay\"; " \
-				"else " \
-					"fdt rm lvds_channel2 primary; " \
 				"fi; " \
 			"fi;" \
 			"run set_bootargs_base;\0" \
