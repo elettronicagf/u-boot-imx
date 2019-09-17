@@ -45,6 +45,7 @@ obj-$(CONFIG_CMD_DISPLAY) += display.o
 obj-$(CONFIG_CMD_ECHO) += echo.o
 obj-$(CONFIG_ENV_IS_IN_EEPROM) += eeprom.o
 obj-$(CONFIG_CMD_EEPROM) += eeprom.o
+obj-$(CONFIG_CMD_INIT_EEPROM) += init_eeprom.o
 obj-$(CONFIG_EFI_STUB) += efi.o
 obj-$(CONFIG_CMD_ELF) += elf.o
 obj-$(CONFIG_HUSH_PARSER) += exit.o
