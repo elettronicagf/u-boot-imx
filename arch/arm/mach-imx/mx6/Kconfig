@@ -459,6 +459,28 @@ config TARGET_MX6UL_SPRIOT
 	select DM
 	select DM_THERMAL
 
+config TARGET_EGF_SBC_MX6ULZ
+	bool "Support elettronicaGF SBC imx6 ULZ"
+	select BOARD_LATE_INIT
+	select MX6ULZ
+	select DM
+	select DM_THERMAL
+
+config TARGET_EGF_SBC_MX6UL
+	bool "Support elettronicaGF SBC imx6 UL"
+	select BOARD_LATE_INIT
+	select MX6UL
+	select DM
+	select DM_THERMAL
+
+config TARGET_EGF_SBC_MX6ULL
+	bool "Support elettronicaGF SBC imx6 ULL"
+	select BOARD_LATE_INIT
+	select MX6ULL
+	select DM
+	select DM_THERMAL
+	select SUPPORT_SPL
+
 config TARGET_MX6ULL_DDR3_ARM2
 	bool "Support mx6ull_ddr3_arm2"
 	select BOARD_LATE_INIT
@@ -672,5 +694,6 @@ source "board/udoo/Kconfig"
 source "board/udoo/neo/Kconfig"
 source "board/wandboard/Kconfig"
 source "board/warp/Kconfig"
+source "board/egf/sbc/Kconfig"
 
 endif

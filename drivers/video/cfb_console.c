@@ -2160,6 +2160,7 @@ int drv_video_init(void)
 #endif
 	}
 
+#ifndef CONFIG_NO_CFB_STDOUT
 	/* Init vga device */
 	memset(&console_dev, 0, sizeof(console_dev));
 	strcpy(console_dev.name, "vga");
@@ -2178,7 +2179,7 @@ int drv_video_init(void)
 
 	if (stdio_register(&console_dev) != 0)
 		return 0;
-
+#endif
 	/* Return success */
 	return 1;
 }

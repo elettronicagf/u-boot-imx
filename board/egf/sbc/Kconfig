@@ -1,0 +1,41 @@
+if TARGET_EGF_SBC_MX6ULZ
+
+config SYS_BOARD
+       default "egf_sbc_mxulz"
+
+config SYS_VENDOR
+       default "egf"
+
+config SYS_CONFIG_NAME
+       default "egf_sbc_mxulz"
+
+endif
+
+if TARGET_EGF_SBC_MX6UL
+
+config SYS_BOARD
+       default "egf_sbc_mxul"
+
+config SYS_VENDOR
+       default "egf"
+
+config SYS_CONFIG_NAME
+       default "egf_sbc_mxul"
+
+endif
+
+if TARGET_EGF_SBC_MX6ULL
+
+config SYS_BOARD
+       default "sbc"
+
+config SYS_VENDOR
+       default "egf"
+
+config SYS_CONFIG_NAME
+       default "egf_sbc_mx6"
+       
+config SYS_TEXT_BASE
+    default 0x17800000       
+
+endif
