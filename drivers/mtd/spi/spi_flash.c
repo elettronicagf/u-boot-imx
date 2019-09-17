@@ -85,6 +85,69 @@ static int write_sr(struct spi_flash *flash, u8 ws)
 	return 0;
 }
 
+static int spi_flash_sr_ready(struct spi_flash *flash)
+{
+	u8 sr;
+	int ret;
+
+	ret = read_sr(flash, &sr);
+	if (ret < 0)
+		return ret;
+
+	return !(sr & STATUS_WIP);
+}
+
+static int spi_flash_fsr_ready(struct spi_flash *flash)
+{
+	u8 fsr;
+	int ret;
+
+	ret = read_fsr(flash, &fsr);
+	if (ret < 0)
+		return ret;
+
+	return fsr & STATUS_PEC;
+}
+
+static int spi_flash_ready(struct spi_flash *flash)
+{
+	int sr, fsr;
+
+	sr = spi_flash_sr_ready(flash);
+	if (sr < 0)
+		return sr;
+
+	fsr = 1;
+	if (flash->flags & SNOR_F_USE_FSR) {
+		fsr = spi_flash_fsr_ready(flash);
+		if (fsr < 0)
+			return fsr;
+	}
+
+	return sr && fsr;
+}
+
+static int spi_flash_wait_till_ready(struct spi_flash *flash,
+					unsigned long timeout)
+{
+	int timebase, ret;
+
+	timebase = get_timer(0);
+
+	while (get_timer(timebase) < timeout) {
+		ret = spi_flash_ready(flash);
+		if (ret < 0)
+			return ret;
+		if (ret)
+			return 0;
+	}
+
+	printf("SF: Timeout!\n");
+
+	return -ETIMEDOUT;
+}
+
+
 #define SRWD	(1<<7)	//SRWD Status Register 1
 #define BP2		(1<<4)
 #define BP1		(1<<3)
@@ -98,6 +161,7 @@ int spi_flash_cmd_lock_enable(struct spi_flash *flash, u8 enabled)
 	u8 cmd;
 	u8 value;
 	u8 value_new;
+	unsigned long timeout = SPI_FLASH_PROG_TIMEOUT;
 
 	cmd = CMD_READ_STATUS;
 	ret = spi_flash_read_common(flash, &cmd, 1, &value, 1);
@@ -121,7 +185,15 @@ int spi_flash_cmd_lock_enable(struct spi_flash *flash, u8 enabled)
 			debug("SF: fail to write status register\n");
 			return ret;
 		}
+
 		printf("SF: SR1=%x\n", value_new);
+	}
+
+
+	ret = spi_flash_wait_till_ready(flash, timeout);
+	if (ret < 0) {
+		debug("SF: write to status register timed out\n");
+		return ret;
 	}
 
 	return 0;
@@ -261,68 +333,7 @@ static void spi_flash_dual(struct spi_flash *flash, u32 *addr)
 }
 #endif
 
-static int spi_flash_sr_ready(struct spi_flash *flash)
-{
-	u8 sr;
-	int ret;
 
-	ret = read_sr(flash, &sr);
-	if (ret < 0)
-		return ret;
-
-	return !(sr & STATUS_WIP);
-}
-
-static int spi_flash_fsr_ready(struct spi_flash *flash)
-{
-	u8 fsr;
-	int ret;
-
-	ret = read_fsr(flash, &fsr);
-	if (ret < 0)
-		return ret;
-
-	return fsr & STATUS_PEC;
-}
-
-static int spi_flash_ready(struct spi_flash *flash)
-{
-	int sr, fsr;
-
-	sr = spi_flash_sr_ready(flash);
-	if (sr < 0)
-		return sr;
-
-	fsr = 1;
-	if (flash->flags & SNOR_F_USE_FSR) {
-		fsr = spi_flash_fsr_ready(flash);
-		if (fsr < 0)
-			return fsr;
-	}
-
-	return sr && fsr;
-}
-
-static int spi_flash_wait_till_ready(struct spi_flash *flash,
-				     unsigned long timeout)
-{
-	unsigned long timebase;
-	int ret;
-
-	timebase = get_timer(0);
-
-	while (get_timer(timebase) < timeout) {
-		ret = spi_flash_ready(flash);
-		if (ret < 0)
-			return ret;
-		if (ret)
-			return 0;
-	}
-
-	printf("SF: Timeout!\n");
-
-	return -ETIMEDOUT;
-}
 
 int spi_flash_write_common(struct spi_flash *flash, const u8 *cmd,
 		size_t cmd_len, const void *buf, size_t buf_len)
