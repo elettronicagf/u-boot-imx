@@ -275,8 +275,7 @@
 #define CONFIG_BOOTCOMMAND \
 	   "run usbupdate;" \
 	   "run otaupdate;" \
-	   "run usbboot;" \
-	   "run nandboot"
+	   "run usbboot;"
 #endif
 
 /* Miscellaneous configurable options */
