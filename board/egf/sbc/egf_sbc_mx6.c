@@ -190,9 +190,9 @@ void prepare_boot_env(void)
 int board_usb_phy_mode(int port)
 {
 	if (port == 0)
-		return USB_INIT_HOST;
+		return USB_INIT_DEVICE;
 	else
-		return usb_phy_mode(port);
+		return USB_INIT_HOST; //usb_phy_mode(port);
 }
 
 int board_ehci_hcd_init(int port)
@@ -215,11 +215,13 @@ int board_ehci_power(int port, int on)
 {
 	switch (port) {
 	case 0:
-		if (on) {
-			gpio_direction_output(USB_OTG1_PWR_EN_GPIO,1);
-			mdelay(100);
-		} else
-			gpio_direction_output(USB_OTG1_PWR_EN_GPIO,0);
+		//OTG port, disabled in u-boot
+//		if (on) {
+//			gpio_direction_output(USB_OTG1_PWR_EN_GPIO,1);
+//			mdelay(100);
+//		} else
+//			gpio_direction_output(USB_OTG1_PWR_EN_GPIO,0);
+		return -EINVAL;
 		break;
 	case 1:
 		if (on) {
