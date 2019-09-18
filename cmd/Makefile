@@ -153,6 +153,8 @@ obj-$(CONFIG_CMD_REGULATOR) += regulator.o
 obj-$(CONFIG_CMD_BLOB) += blob.o
 
 obj-$(CONFIG_X86) += x86/
+
+obj-$(CONFIG_CMD_EGF_UPDATE) += egf_update.o
 endif # !CONFIG_SPL_BUILD
 
 # core command
