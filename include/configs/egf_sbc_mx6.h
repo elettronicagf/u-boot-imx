@@ -202,9 +202,9 @@
 				"echo invalid display selection ${panel}; " \
 			"fi;\0" \
 	"check_update_header=egf_update_validate_header " __stringify(CFG_UPDATE_PACKAGE_LOADADDR) "\0" \
-	"display_update_logo=fatload memblk 0 " __stringify(CFG_LOGO_LOADADDR)" logo.bmp;bmp display " __stringify(CFG_LOGO_LOADADDR)" ;\0" \
-	"loadfdt_update=fatload memblk 0 ${fdt_addr} ${fdt_file}\0" \
-	"loadimage_update=fatload memblk 0 ${loadaddr} ${image}\0" \
+	"display_update_logo=fatload mem 0 " __stringify(CFG_LOGO_LOADADDR)" logo.bmp;bmp display " __stringify(CFG_LOGO_LOADADDR)" ;\0" \
+	"loadfdt_update=fatload mem 0 ${fdt_addr} ${fdt_file}\0" \
+	"loadimage_update=fatload mem 0 ${loadaddr} ${image}\0" \
 	"start_ota=egf_ota_start\0" \
 	"loadfdt_usb=fatload usb 0 ${fdt_addr} ${fdt_file}\0" \
 	"loadimage_usb=fatload usb 0 ${loadaddr} ${image}\0" \
@@ -273,6 +273,7 @@
 			"fi;\0 " \
 
 #define CONFIG_BOOTCOMMAND \
+	   "memblk init;usb reset" \
 	   "run usbupdate;" \
 	   "run otaupdate;" \
 	   "run usbboot;"
