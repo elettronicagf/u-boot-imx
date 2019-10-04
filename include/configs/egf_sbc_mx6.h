@@ -168,7 +168,7 @@
 	"unlocknor=sf probe; gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";sf unlock;\0" \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
-	"console=ttymxc4\0" \
+	"console=ttymxc2\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
 	"fdt_file=undefined\0" \
@@ -208,6 +208,10 @@
 	"start_ota=egf_ota_start\0" \
 	"loadfdt_usb=fatload usb 0 ${fdt_addr} ${fdt_file}\0" \
 	"loadimage_usb=fatload usb 0 ${loadaddr} ${image}\0" \
+	"emmcargs=setenv bootargs ${bootargs_base} root=/dev/mmcblk0p2 rootfstype=ext4 rootwait rw \0" \
+	"loadimage_emmc=fatload mmc 0 ${loadaddr} ${image}\0" \
+	"loadfdt_emmc=fatload mmc 0 ${fdt_addr} ${fdt_file}\0" \
+	"loadsplash_emmc=if fatload mmc 0 0x10000000 logo.bmp; then bmp d 0x10000000; fi;\0" \
 	"usbargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel}\0" \
 	"usbboot=echo Try Booting from USB...;" \
 			"usb start;" \
@@ -261,22 +265,27 @@
 				"fi;\0" \
 	"loadfdt_nand=nand read ${fdt_addr} 0xA00000 0x20000\0" \
 	"loadimage_nand=nand read ${loadaddr} 0x0 0xA00000\0" \
-	"nandargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel}\0" \
-	"nandboot=echo Try Booting from NAND...;" \
-			"if run loadfdt_nand; then " \
-				"if run loadimage_nand; then " \
-					"setenv nandargs ${nandargs} ubi.mtd=2 root=ubi0:rootfs rw rootfstype=ubifs; " \
-					"run nandargs; " \
-					"run fix_dt; " \
-					"bootz ${loadaddr} - ${fdt_addr};" \
-				"fi; " \
-			"fi;\0 " \
+	"emmcboot=echo Try Booting from eMMC...; " \
+		"mmc rescan; " \
+		"if run loadfdt_emmc; then " \
+			"if run loadimage_emmc; then " \
+				"echo Booting from eMMC Card; " \
+				"run fix_dt; " \
+				"run emmcargs; " \
+				"run loadsplash_emmc;" \
+				"echo ${bootargs}; " \
+				"bootz ${loadaddr} - ${fdt_addr}; " \
+			"fi; " \
+		"fi;\0 " \
+
 
 #define CONFIG_BOOTCOMMAND \
-	   "memblk init;usb reset" \
+	   "memblk init;usb reset;" \
 	   "run usbupdate;" \
 	   "run otaupdate;" \
-	   "run usbboot;"
+	   "run usbboot;" \
+	   "run emmcboot;"
+
 #endif
 
 /* Miscellaneous configurable options */
