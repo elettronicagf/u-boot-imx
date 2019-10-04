@@ -49,7 +49,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define EGF_FDT_FILE_NAME_LENGTH	(13 + WID_LENGTH + 1)
 
 /* SW REVISIONS*/
-#define REV_WID0569_AA0101 "WID0569_AA01.01"
+#define REV_WID0659_AA0101 "WID0659_AA01.01"
 
 #ifdef CONFIG_SYS_I2C_MXC
 #ifdef CONFIG_POWER
@@ -163,7 +163,7 @@ void prepare_boot_env(void)
 	egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
 	som_serial_number = gf_eeprom_get_som_serial_number();
 	fdt_file_name[0] = 0;
-	gf_strcat(fdt_file_name, "imx6-egf-");
+	gf_strcat(fdt_file_name, "egf-sbc-");
 	gf_strcat(fdt_file_name, egf_sw_id_code);
 	gf_strcat(fdt_file_name, ".dtb");
 
@@ -625,7 +625,7 @@ int board_late_init(void)
 #endif
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	env_set("board_name", "0569 SBC");
+	env_set("board_name", "0659 SBC");
 
 #endif
 
@@ -637,13 +637,13 @@ int board_late_init(void)
 int checkboard(void)
 {
 #ifdef CONFIG_MX6ULL
-	puts("Board: 0569 SBC MX6ULL\n");
+	puts("Board: 0659 SBC MX6ULL\n");
 #elif CONFIG_MX6UL
-	puts("Board: 0569 SBC MX6UL\n");
+	puts("Board: 0659 SBC MX6UL\n");
 #elif CONFIG_MX6ULZ
-	puts("Board: 0569 SBC MX6ULZ\n");
+	puts("Board: 0659 SBC MX6ULZ\n");
 #else
-	puts("Board: 0569 SBC Unrecognized Processor\n");
+	puts("Board: 0659 SBC Unrecognized Processor\n");
 #endif
 	return 0;
 }
@@ -714,7 +714,7 @@ struct egf_som {
 
 static struct egf_som __attribute__((section (".data"))) the_som;
 
-static struct egf_som the_som_WID_0569_AA0101 = {
+static struct egf_som the_som_WID_0659_AA0101 = {
 		K4B4G1646E_BYK0,
 		DDR_BUS_WIDTH_16BIT,
 		1,
@@ -757,11 +757,11 @@ int load_revision(void)
 		while(1);
  	}
 
-	if(!gf_strcmp(egf_sw_id_code,REV_WID0569_AA0101))
+	if(!gf_strcmp(egf_sw_id_code,REV_WID0659_AA0101))
 	{
-		/* SW Revision is WID0569_AA01.01 */
-		printf("GF Software ID Code: WID0569_AA01.01\n");
-		memcpy(&the_som, &the_som_WID_0569_AA0101, sizeof(the_som));
+		/* SW Revision is WID0659_AA01.01 */
+		printf("GF Software ID Code: WID0659_AA01.01\n");
+		memcpy(&the_som, &the_som_WID_0659_AA0101, sizeof(the_som));
 	}
 //	else if(!gf_strcmp(egf_sw_id_code,REV_WID0571_AH0101))
 //	{
