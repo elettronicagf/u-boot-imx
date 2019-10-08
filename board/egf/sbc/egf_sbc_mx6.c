@@ -367,6 +367,18 @@ int board_mmc_init(bd_t *bis)
 
 
 #ifdef CONFIG_VIDEO_MXS
+void do_enable_touch_mxt()
+{
+	gpio_direction_output(TS_PWR_EN, 0);
+	gpio_direction_output(TS_nRST,   0);
+	gpio_direction_output(TS_PWR_EN, 1);
+
+	//>90ns required
+	udelay(1);
+	gpio_direction_output(TS_nRST,   1);
+}
+
+
 void do_enable_parallel_lcd(struct display_info_t const *dev)
 {
 	enable_lcdif_clock(dev->bus, true);
@@ -493,6 +505,8 @@ int board_video_skip(void)
 	char const *panel_env = env_get("panel");
 
 	panel[0] = 0;
+
+	do_enable_touch_mxt();
 
 	if (!panel_env){
 #ifdef CONFIG_WID

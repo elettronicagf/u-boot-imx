@@ -129,15 +129,18 @@ static iomux_v3_cfg_t const misc_gpio_pads[] = {
 	MX6_PAD_SNVS_TAMPER8__GPIO5_IO08	| DIO_PDOWN_PAD_CFG , 				// UART1_3V3_nRS232_RS485 - GPIO 136
 	MX6_PAD_SNVS_TAMPER9__GPIO5_IO09	| MUX_PAD_CTRL(DIO_PUP_PAD_CTRL),	// UART1_3V3_RS485-ECHO - GPIO 137
 
-	MX6_PAD_NAND_CE0_B__GPIO4_IO13		| DIO_PUP_PAD_CFG, 					// TS_nINT - GPIO 109
-	MX6_PAD_NAND_CE1_B__GPIO4_IO14 		| MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL), // TS_PWR_EN - GPIO 110
-	MX6_PAD_NAND_WP_B__GPIO4_IO11  		| MUX_PAD_CTRL(DIO_PUP_PAD_CTRL),   // TS_nRST - GPIO 107
 	MX6_PAD_SNVS_TAMPER3__GPIO5_IO03 	| MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL), // SPINOR-WP - GPIO 131
 	MX6_PAD_SNVS_TAMPER2__GPIO5_IO02	| MUX_PAD_CTRL(DIO_PUP_PAD_CTRL),   // EEP_WP - GPIO 130
 
 	MX6_PAD_GPIO1_IO05__GPIO1_IO05		| MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL), // GPIO1_IO05
 	MX6_PAD_GPIO1_IO08__GPIO1_IO08		| MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL), // GPIO1_IO08
 	MX6_PAD_GPIO1_IO09__GPIO1_IO09		| MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL), // GPIO1_IO09
+};
+
+static iomux_v3_cfg_t const touch_pads[] = {
+	MX6_PAD_NAND_CE0_B__GPIO4_IO13		| DIO_PUP_PAD_CFG, 					// TS_nINT - GPIO 109
+	MX6_PAD_NAND_CE1_B__GPIO4_IO14 		| MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL), // TS_PWR_EN - GPIO 110
+	MX6_PAD_NAND_WP_B__GPIO4_IO11  		| MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL), // TS_nRST - GPIO 107
 };
 
 static iomux_v3_cfg_t const wdog_pads[] = {
@@ -276,7 +279,7 @@ static void my_can_init_mux(void)
 static void my_i2c_init_mux(void)
 {
 	setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
-	//setup_i2c(3, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info4);
+	setup_i2c(3, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info4);
 }
 
 static void my_gpio_init_mux(void)
@@ -316,9 +319,7 @@ static void my_buzzer_init_mux(void)
 
 static void my_touchscreen_init_mux(void)
 {
-	//studiare muxing per controller interno
-	//imx_iomux_v3_setup_multiple_pads(touchscreen_pads, ARRAY_SIZE(touchscreen_pads));
-	gpio_direction_output(TS_nRST, 1);
+	imx_iomux_v3_setup_multiple_pads(touch_pads, ARRAY_SIZE(touch_pads));
 }
 
 static void my_emmc_init_mux(void)
