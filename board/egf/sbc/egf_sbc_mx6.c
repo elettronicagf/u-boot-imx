@@ -371,7 +371,7 @@ void do_enable_parallel_lcd(struct display_info_t const *dev)
 {
 	enable_lcdif_clock(dev->bus, true);
 
-	gpio_direction_output(LCD_POWER_ENABLE, 1);
+	gpio_direction_output(LCD_POWER_ENABLE, 0);
 
 	/* Set Brightness to high */
 	gpio_direction_output(BKL_DISPLAY_PWM_GPIO, 1);
@@ -385,16 +385,35 @@ struct display_info_t const displays[] = {
 	.detect = NULL,
 	.enable	= do_enable_parallel_lcd,
 	.mode	= {
+		.name			= "EGF_BLC1177",
+		.xres           = 800,
+		.yres           = 480,
+		.pixclock       = 33333,
+		.left_margin    = 210,
+		.right_margin   = 20,
+		.upper_margin   = 22,
+		.lower_margin   = 20,
+		.hsync_len      = 26,
+		.vsync_len      = 3,
+		.sync           = FB_SYNC_CLK_LAT_FALL,
+		.vmode          = FB_VMODE_NONINTERLACED
+	}
+},
+{
+	.bus = MX6UL_LCDIF1_BASE_ADDR,
+	.addr = 0,
+	.pixfmt = 24,
+	.detect = NULL,
+	.enable	= do_enable_parallel_lcd,
+	.mode	= {
 		.name			= "EGF_BLC1156",
-		.xres           = 480,
-		.yres           = 272,
-		.pixclock       = 111111,
-		.left_margin    = 43,
-		.right_margin   = 8,
-		.upper_margin   = 12,
-		.lower_margin   = 8,
-		.hsync_len      = 4,
-		.vsync_len      = 4,
+		.pixclock       = 33333,
+		.left_margin    = 40,
+		.right_margin   = 88,
+		.upper_margin   = 32,
+		.lower_margin   = 13,
+		.hsync_len      = 48,
+		.vsync_len      = 3,
 		.sync           = FB_SYNC_CLK_LAT_FALL,
 		.vmode          = FB_VMODE_NONINTERLACED
 	}
@@ -482,7 +501,7 @@ int board_video_skip(void)
 		egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
 #endif
 		//default panel
-		strcpy(panel, "EGF_BLC1154");
+		strcpy(panel, "EGF_BLC1177");
 		env_set("panel", panel);
 /*
 		if (egf_sw_id_code)

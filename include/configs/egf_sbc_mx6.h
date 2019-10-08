@@ -16,6 +16,8 @@
 #include <asm/mach-imx/gpio.h>
 #include "imx_env.h"
 
+#define CFG_LCD_POWER_ENABLE	46
+
 #ifdef CONFIG_SECURE_BOOT
 #ifndef CONFIG_CSF_SIZE
 #define CONFIG_CSF_SIZE 0x4000
@@ -128,6 +130,7 @@
 		"spl_copy_addr=0x80100000\0" \
 		"uboot_img_copy_addr=0x80600000\0" \
 		"bootcmd_mfg=sf probe;" \
+		"gpio clear " __stringify(CFG_LCD_POWER_ENABLE) ";" \
 		"gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 		"sf unlock;" \
 		"sf erase 0x0 0x200000;" \
@@ -139,7 +142,7 @@
 		"fi;" \
 		"sf lock;" \
 		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
-		"gpio clear 8;\0 "
+		"gpio set " __stringify(CFG_LCD_POWER_ENABLE) ";\0 "
 #else
 #define CONFIG_MFG_ENV_SETTINGS \
 		"setenv stdin serial; " \
@@ -186,18 +189,27 @@
 		     	 "fdt rm EGF_BLC1155; " \
 		     	 "fdt rm EGF_BLC1156; " \
 		     	 "fdt rm EGF_BLC1165; " \
+		     	 "fdt rm EGF_BLC1177; " \
 		    "elif test \"${panel}\" = \"EGF_BLC1155\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1156; " \
 		     	 "fdt rm EGF_BLC1165; " \
+		     	 "fdt rm EGF_BLC1177; " \
 		    "elif test \"${panel}\" = \"EGF_BLC1156\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1155; " \
 		     	 "fdt rm EGF_BLC1165; " \
+		     	 "fdt rm EGF_BLC1177; " \
 		     "elif test \"${panel}\" = \"EGF_BLC1165\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1155; " \
 		     	 "fdt rm EGF_BLC1156; " \
+		     	 "fdt rm EGF_BLC1177; " \
+		     "elif test \"${panel}\" = \"EGF_BLC1177\"; then " \
+		     	 "fdt rm EGF_BLC1154; " \
+		     	 "fdt rm EGF_BLC1155; " \
+		     	 "fdt rm EGF_BLC1156; " \
+		     	 "fdt rm EGF_BLC1165; " \
 			"else " \
 				"echo invalid display selection ${panel}; " \
 			"fi;\0" \
@@ -211,7 +223,7 @@
 	"emmcargs=setenv bootargs ${bootargs_base} root=/dev/mmcblk0p2 rootfstype=ext4 rootwait rw \0" \
 	"loadimage_emmc=fatload mmc 0 ${loadaddr} ${image}\0" \
 	"loadfdt_emmc=fatload mmc 0 ${fdt_addr} ${fdt_file}\0" \
-	"loadsplash_emmc=if fatload mmc 0 0x10000000 logo.bmp; then bmp d 0x10000000; fi;\0" \
+	"loadsplash_emmc=if fatload mmc 0 0x80000000 logo.bmp; then bmp d 0x80000000; fi;\0" \
 	"usbargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel}\0" \
 	"usbboot=echo Try Booting from USB...;" \
 			"usb start;" \
@@ -281,6 +293,7 @@
 
 #define CONFIG_BOOTCOMMAND \
 	   "memblk init;usb reset;" \
+	   "gpio clear " __stringify(CFG_LCD_POWER_ENABLE) ";" \
 	   "run usbupdate;" \
 	   "run otaupdate;" \
 	   "run usbboot;" \
