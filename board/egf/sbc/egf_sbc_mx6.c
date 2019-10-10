@@ -106,6 +106,17 @@ int power_init_board(void)
 	return 0;
 }
 
+static void setup_wifi_ATWIL3000(void )
+{
+	gpio_direction_output(WIFI_ATLWIL3000_RESET, 0);
+	gpio_direction_output(WIFI_ATLWIL3000_CHIPEN, 0);
+
+	mdelay(5);
+	gpio_direction_output(WIFI_ATLWIL3000_CHIPEN, 1);
+	mdelay(5);
+	gpio_direction_output(WIFI_ATLWIL3000_RESET, 1);
+}
+
 #ifdef CONFIG_LDO_BYPASS_CHECK
 void ldo_mode_set(int ldo_bypass)
 {
@@ -638,6 +649,8 @@ int board_init(void)
 #ifdef CONFIG_NAND_MXS
 	setup_gpmi_nand();
 #endif
+
+	setup_wifi_ATWIL3000();
 
 	return 0;
 }

@@ -362,6 +362,7 @@ void egf_board_mux_init(int mode)
 		my_touchscreen_init_mux();
 		my_emmc_init_mux();
 		my_wdog_init_mux();
+		my_wifi_init_mux();
 		break;
 	default:
 		printf("MUX MODE NOT DEFINED!!!!!!!!!!!!\n");

@@ -14,6 +14,9 @@
 #define TS_PWR_EN				IMX_GPIO_NR(4, 14)
 #define LCD_POWER_ENABLE		IMX_GPIO_NR(2, 14)
 
+#define WIFI_ATLWIL3000_RESET	IMX_GPIO_NR(5,4) //WMOD_3V3_nRST
+#define WIFI_ATLWIL3000_CHIPEN	IMX_GPIO_NR(5,6) //WMOD_3V3_EN
+
 void egf_board_mux_init(int mode);
 
 #endif
