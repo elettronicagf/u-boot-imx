@@ -429,6 +429,27 @@ struct display_info_t const displays[] = {
 	.detect = NULL,
 	.enable	= do_enable_parallel_lcd,
 	.mode	= {
+		.name			= "EGF_BLC1182",
+		.xres           = 1280,
+		.yres           = 800,
+		.pixclock       = 14285,
+		.left_margin    = 80,
+		.right_margin   = 40,
+		.upper_margin   = 8,
+		.lower_margin   = 9,
+		.hsync_len      = 50,
+		.vsync_len      = 6,
+		.sync           = FB_SYNC_CLK_LAT_FALL,
+		.vmode          = FB_VMODE_NONINTERLACED
+	}
+},
+{
+	.bus = MX6UL_LCDIF1_BASE_ADDR,
+	.addr = 0,
+	.pixfmt = 24,
+	.detect = NULL,
+	.enable	= do_enable_parallel_lcd,
+	.mode	= {
 		.name			= "EGF_BLC1156",
 		.pixclock       = 33333,
 		.left_margin    = 40,
@@ -526,7 +547,7 @@ int board_video_skip(void)
 		egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
 #endif
 		//default panel
-		strcpy(panel, "EGF_BLC1177");
+		strcpy(panel, "EGF_BLC1182");
 		env_set("panel", panel);
 /*
 		if (egf_sw_id_code)

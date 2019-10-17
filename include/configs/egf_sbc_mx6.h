@@ -190,26 +190,37 @@
 		     	 "fdt rm EGF_BLC1156; " \
 		     	 "fdt rm EGF_BLC1165; " \
 		     	 "fdt rm EGF_BLC1177; " \
+		     	 "fdt rm EGF_BLC1182; " \
 		    "elif test \"${panel}\" = \"EGF_BLC1155\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1156; " \
 		     	 "fdt rm EGF_BLC1165; " \
 		     	 "fdt rm EGF_BLC1177; " \
+		     	 "fdt rm EGF_BLC1182; " \
 		    "elif test \"${panel}\" = \"EGF_BLC1156\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1155; " \
 		     	 "fdt rm EGF_BLC1165; " \
 		     	 "fdt rm EGF_BLC1177; " \
+		     	 "fdt rm EGF_BLC1182; " \
 		     "elif test \"${panel}\" = \"EGF_BLC1165\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1155; " \
 		     	 "fdt rm EGF_BLC1156; " \
 		     	 "fdt rm EGF_BLC1177; " \
+		     	 "fdt rm EGF_BLC1182; " \
 		     "elif test \"${panel}\" = \"EGF_BLC1177\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1155; " \
 		     	 "fdt rm EGF_BLC1156; " \
 		     	 "fdt rm EGF_BLC1165; " \
+		     	 "fdt rm EGF_BLC1182; " \
+		     "elif test \"${panel}\" = \"EGF_BLC1182\"; then " \
+		     	 "fdt rm EGF_BLC1154; " \
+		     	 "fdt rm EGF_BLC1155; " \
+		     	 "fdt rm EGF_BLC1156; " \
+		     	 "fdt rm EGF_BLC1165; " \
+				 "fdt rm EGF_BLC1177; " \
 			"else " \
 				"echo invalid display selection ${panel}; " \
 			"fi;\0" \
@@ -220,7 +231,7 @@
 	"start_ota=egf_ota_start\0" \
 	"loadfdt_usb=fatload usb 0 ${fdt_addr} ${fdt_file}\0" \
 	"loadimage_usb=fatload usb 0 ${loadaddr} ${image}\0" \
-	"emmcargs=setenv bootargs ${bootargs_base} root=/dev/mmcblk0p2 rootfstype=ext4 rootwait rw \0" \
+	"emmcargs=setenv bootargs ${bootargs_base} ${smp} ${g_ether_args} root=/dev/mmcblk0p2 rootfstype=ext4 rootwait rw \0" \
 	"loadimage_emmc=fatload mmc 0 ${loadaddr} ${image}\0" \
 	"loadfdt_emmc=fatload mmc 0 ${fdt_addr} ${fdt_file}\0" \
 	"loadsplash_emmc=if fatload mmc 0 0x80000000 logo.bmp; then bmp d 0x80000000; fi;\0" \
@@ -275,8 +286,6 @@
 						"fi; " \
 					"fi; " \
 				"fi;\0" \
-	"loadfdt_nand=nand read ${fdt_addr} 0xA00000 0x20000\0" \
-	"loadimage_nand=nand read ${loadaddr} 0x0 0xA00000\0" \
 	"emmcboot=echo Try Booting from eMMC...; " \
 		"mmc rescan; " \
 		"if run loadfdt_emmc; then " \
