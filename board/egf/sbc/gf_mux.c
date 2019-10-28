@@ -72,12 +72,14 @@
 	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | 		\
 	PAD_CTL_SRE_SLOW | PAD_CTL_HYS)
 
+#define NO_PAD_CTRL_SION_CFG	(MUX_PAD_CTRL(NO_PAD_CTRL) | MUX_MODE_SION)
+
 // CN8 rs232/rs485
 static iomux_v3_cfg_t const uart1_pads[] = {
 	MX6_PAD_UART1_TX_DATA__UART1_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
 	MX6_PAD_UART1_RX_DATA__UART1_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
-	MX6_PAD_UART1_CTS_B__UART1_DCE_CTS 	| MUX_PAD_CTRL(UART_PAD_CTRL),
-	MX6_PAD_UART1_RTS_B__UART1_DCE_RTS 	| MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX6_PAD_UART1_CTS_B__GPIO1_IO18 	| DIO_PDOWN_PAD_CFG,
+	MX6_PAD_UART1_RTS_B__GPIO1_IO19 	| DIO_PDOWN_PAD_CFG,
 };
 
 //wifi/bt
@@ -94,14 +96,8 @@ static iomux_v3_cfg_t const uart3_pads[] = {
 	MX6_PAD_UART3_RX_DATA__UART3_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
 };
 
-//CN1
-static iomux_v3_cfg_t const uart5_pads[] = {
-	MX6_PAD_UART5_TX_DATA__UART5_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
-	MX6_PAD_UART5_RX_DATA__UART5_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
-};
-
 /* ULZ spinor  */
-static iomux_v3_cfg_t const ecspi2_pads[] = {
+static iomux_v3_cfg_t const ecspi2_pads_ulz[] = {
 	MX6_PAD_CSI_DATA00__ECSPI2_SCLK | MUX_PAD_CTRL(SPI_PAD_CTRL),
 	MX6_PAD_CSI_DATA01__GPIO4_IO22  | MUX_PAD_CTRL(DIO_PUP_PAD_CTRL), //CS
 	MX6_PAD_CSI_DATA02__ECSPI2_MOSI | MUX_PAD_CTRL(SPI_PAD_CTRL),
@@ -114,12 +110,6 @@ static iomux_v3_cfg_t const ecspi3_pads[] = {
 	MX6_PAD_UART2_RX_DATA__ECSPI3_SCLK 	| MUX_PAD_CTRL(SPI_PAD_CTRL),
 	MX6_PAD_UART2_CTS_B__ECSPI3_MOSI 	| MUX_PAD_CTRL(SPI_PAD_CTRL),
 	MX6_PAD_UART2_RTS_B__ECSPI3_MISO 	| MUX_PAD_CTRL(SPI_PAD_CTRL),
-};
-
-/* FlexCAN1 */
-static iomux_v3_cfg_t const flexcan1_pads[] = {
-	MX6_PAD_UART3_RTS_B__FLEXCAN1_RX | (MUX_PAD_CTRL(CAN_PAD_CTRL) | MUX_MODE_SION),
-	MX6_PAD_UART3_CTS_B__FLEXCAN1_TX | MUX_PAD_CTRL(CAN_PAD_CTRL),
 };
 
 /* GPIOs */
@@ -267,13 +257,8 @@ static struct i2c_pads_info i2c_pad_info4 = {
 static void my_uart_init_mux(void)
 {
 	imx_iomux_v3_setup_multiple_pads(uart1_pads, ARRAY_SIZE(uart1_pads));
+	imx_iomux_v3_setup_multiple_pads(uart2_pads, ARRAY_SIZE(uart2_pads));
 	imx_iomux_v3_setup_multiple_pads(uart3_pads, ARRAY_SIZE(uart3_pads));
-	imx_iomux_v3_setup_multiple_pads(uart5_pads, ARRAY_SIZE(uart5_pads));
-}
-
-static void my_can_init_mux(void)
-{
-	imx_iomux_v3_setup_multiple_pads(flexcan1_pads, ARRAY_SIZE(flexcan1_pads));
 }
 
 static void my_i2c_init_mux(void)
@@ -292,7 +277,7 @@ static void my_spinor_init_mux(void)
 #if 1 //ULL UL
 	imx_iomux_v3_setup_multiple_pads(ecspi3_pads, ARRAY_SIZE(ecspi3_pads));
 #else //ULZ
-	imx_iomux_v3_setup_multiple_pads(ecspi2_pads, ARRAY_SIZE(ecspi2_pads));
+	imx_iomux_v3_setup_multiple_pads(ecspi2_pads_ulz, ARRAY_SIZE(ecspi2_pads_ulz));
 #endif
 }
 
@@ -339,6 +324,86 @@ static void my_wifi_init_mux(void)
 	imx_iomux_v3_setup_multiple_pads(sd2_pads, ARRAY_SIZE(sd2_pads));
 }
 
+//***************************
+//* expansion connector CN1 *
+//***************************
+static struct i2c_pads_info i2c_pad_info2 = {
+	.scl = {
+		.i2c_mode =  MX6_PAD_GPIO1_IO00__I2C2_SCL 			| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6_PAD_GPIO1_IO00__GPIO1_IO00 		| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(1, 0),
+	},
+	.sda = {
+		.i2c_mode = MX6_PAD_UART5_RX_DATA__I2C2_SDA 		| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gpio_mode = MX6_PAD_UART5_RX_DATA__GPIO1_IO31	 	| MUX_PAD_CTRL(I2C_PAD_CTRL),
+		.gp = IMX_GPIO_NR(1, 31),
+	},
+};
+
+static iomux_v3_cfg_t const ecspi1_pads[] = {
+	MX6_PAD_CSI_DATA04__ECSPI1_SCLK | MUX_PAD_CTRL(SPI_PAD_CTRL),
+	MX6_PAD_CSI_DATA06__ECSPI1_MOSI | MUX_PAD_CTRL(SPI_PAD_CTRL),
+	MX6_PAD_CSI_DATA07__ECSPI1_MISO | MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const ecspi2_pads[] = {
+	MX6_PAD_CSI_DATA00__ECSPI2_SCLK | MUX_PAD_CTRL(SPI_PAD_CTRL),
+	MX6_PAD_CSI_DATA02__ECSPI2_MOSI | MUX_PAD_CTRL(SPI_PAD_CTRL),
+	MX6_PAD_CSI_DATA03__ECSPI2_MISO | MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const cn1_gpio_pads[] = {
+	MX6_PAD_GPIO1_IO04__GPIO1_IO04    | DIO_PUP_PAD_CFG,
+	MX6_PAD_GPIO1_IO03__GPIO1_IO03    | DIO_PUP_PAD_CFG,
+	MX6_PAD_GPIO1_IO02__GPIO1_IO02    | DIO_PUP_PAD_CFG,
+	MX6_PAD_GPIO1_IO01__GPIO1_IO01    | DIO_PUP_PAD_CFG,
+	MX6_PAD_JTAG_MOD__GPIO1_IO10	  | DIO_PDOWN_PAD_CFG,
+	MX6_PAD_JTAG_TRST_B__GPIO1_IO15	  | DIO_PUP_PAD_CFG,
+	MX6_PAD_JTAG_TDO__GPIO1_IO12	  | DIO_PUP_PAD_CFG,
+	MX6_PAD_JTAG_TMS__GPIO1_IO11	  | DIO_PUP_PAD_CFG, 	//SPI1_CS0
+	MX6_PAD_CSI_DATA05__GPIO4_IO26    | DIO_PUP_PAD_CFG,    //SPI2_CS0
+};
+
+static iomux_v3_cfg_t const uart5_pads[] = {
+	MX6_PAD_UART5_TX_DATA__UART5_DCE_TX	 | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX6_PAD_CSI_DATA01__UART5_DCE_RX 	 | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX6_PAD_GPIO1_IO09__UART5_DCE_CTS 	 | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX6_PAD_GPIO1_IO08__UART5_DCE_RTS 	 | MUX_PAD_CTRL(UART_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const uart6_pads[] = {
+	MX6_PAD_CSI_MCLK__UART6_DCE_TX		 | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX6_PAD_CSI_PIXCLK__UART6_DCE_RX 	 | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX6_PAD_CSI_HSYNC__UART6_DCE_CTS 	 | MUX_PAD_CTRL(UART_PAD_CTRL),
+	MX6_PAD_CSI_VSYNC__UART6_DCE_RTS 	 | MUX_PAD_CTRL(UART_PAD_CTRL),
+};
+
+static iomux_v3_cfg_t const pwm_pads[] = {
+	MX6_PAD_JTAG_TDI__PWM6_OUT | 	MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL), // PWM6
+	MX6_PAD_JTAG_TCK__PWM7_OUT | 	MUX_PAD_CTRL(DIO_PDOWN_PAD_CTRL), // PWM7
+};
+
+static iomux_v3_cfg_t const flexcan1_pads[] = {
+	MX6_PAD_UART3_RTS_B__FLEXCAN1_RX | NO_PAD_CTRL_SION_CFG,
+	MX6_PAD_UART3_CTS_B__FLEXCAN1_TX | NO_PAD_CTRL_SION_CFG,
+};
+static iomux_v3_cfg_t const adc_pads[] = {
+	MX6_PAD_GPIO1_IO05__GPIO1_IO05  | MUX_PAD_CTRL(ADC_PAD_CTRL),
+};
+
+static void expansion_connector_init_mux_ull(void)
+{
+	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info2);
+	imx_iomux_v3_setup_multiple_pads(cn1_gpio_pads, ARRAY_SIZE(cn1_gpio_pads));
+	imx_iomux_v3_setup_multiple_pads(ecspi1_pads, ARRAY_SIZE(ecspi1_pads));
+	imx_iomux_v3_setup_multiple_pads(ecspi2_pads, ARRAY_SIZE(ecspi2_pads));
+	imx_iomux_v3_setup_multiple_pads(uart5_pads, ARRAY_SIZE(uart5_pads));
+	imx_iomux_v3_setup_multiple_pads(uart6_pads, ARRAY_SIZE(uart6_pads));
+	imx_iomux_v3_setup_multiple_pads(pwm_pads, ARRAY_SIZE(pwm_pads));
+	imx_iomux_v3_setup_multiple_pads(flexcan1_pads, ARRAY_SIZE(flexcan1_pads));
+	imx_iomux_v3_setup_multiple_pads(adc_pads, ARRAY_SIZE(adc_pads));
+}
+
 void egf_board_mux_init(int mode)
 {
 	switch(mode){
@@ -352,7 +417,6 @@ void egf_board_mux_init(int mode)
 	case APPLICATION_MUX_MODE:
 		my_uart_init_mux();
 		my_i2c_init_mux();
-		my_can_init_mux();
 		my_gpio_init_mux();
 		my_spinor_init_mux();
 		my_lcd_init_mux();
@@ -363,6 +427,7 @@ void egf_board_mux_init(int mode)
 		my_emmc_init_mux();
 		my_wdog_init_mux();
 		my_wifi_init_mux();
+		expansion_connector_init_mux_ull();
 		break;
 	default:
 		printf("MUX MODE NOT DEFINED!!!!!!!!!!!!\n");
