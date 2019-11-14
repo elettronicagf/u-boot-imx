@@ -61,4 +61,6 @@ void load_board_eeprom(void);
 int gf_load_som_revision(char ** egf_sw_id_code, int bypass_checks);
 int gf_load_board_revision(char ** egf_sw_id_code);
 int reset_gf_som_eeprom_content(char* egf_sw_id_code, int ask_confirmation);
+
+int gf_load_display_model(char* displayModel);
 #endif /* GF_EEPROM_H_ */

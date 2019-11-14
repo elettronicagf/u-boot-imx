@@ -849,3 +849,18 @@ int reset_gf_som_eeprom_content(char* egf_sw_id_code, int ask_confirmation)
 	return -1;
 
 }
+
+int gf_load_display_model(char* displayModel)
+{
+	gf_i2c_set_bus_num(DISPLAY_EEPROM_I2C_BUS_NO);
+
+	if (gf_i2c_probe(DISPLAY_EEPROM_I2C_ADDRESS)) {
+		gf_debug(0,"Eeprom display not found\n");
+		return -1;
+	}
+
+	/* Read display model */
+	i2c_read(DISPLAY_EEPROM_I2C_ADDRESS, 0, 1, displayModel, 11);
+
+	return 0;
+}

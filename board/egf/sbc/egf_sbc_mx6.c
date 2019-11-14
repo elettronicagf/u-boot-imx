@@ -546,25 +546,10 @@ int board_video_skip(void)
 #else
 		egf_sw_id_code = gf_eeprom_get_som_sw_id_code();
 #endif
-		//default panel
-		strcpy(panel, "EGF_BLC1182");
+		//load panel model from display eeprom
+		gf_load_display_model(panel);
+		panel[11] = NULL;
 		env_set("panel", panel);
-/*
-		if (egf_sw_id_code)
-		{
-			if (!gf_strcmp(egf_sw_id_code, REV_WID0571_AH0101))
-			{
-				strcpy(panel, "EGF_BLC1154");
-				env_set("panel", panel);
-			} else if (!gf_strcmp(egf_sw_id_code, REV_WID0571_AG0101)) {
-				strcpy(panel, "EGF_BLC1165");
-				env_set("panel", panel);
-			} else if (!gf_strcmp(egf_sw_id_code, REV_WID0571_AI0101)) {
-				strcpy(panel, "EGF_BLC1165");
-				env_set("panel", panel);
-			}
-		}
-*/
 	} else {
 		strcpy(panel, panel_env);
 	}
