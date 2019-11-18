@@ -181,7 +181,7 @@
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"update_md5=\0" \
-	"logo=logo-boot.bmp;\0" \
+	"logo=logo-boot.bmp\0" \
 	"g_ether_args=g_ether.dev_addr=58:05:56:00:04:5e g_ether.host_addr=58:05:56:00:04:5d\0" \
 	"ip_dyn=yes\0" \
 	"destroyenv=sf probe; gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
