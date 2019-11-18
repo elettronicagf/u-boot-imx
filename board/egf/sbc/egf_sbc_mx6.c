@@ -42,6 +42,7 @@
 #endif
 #endif /*CONFIG_FSL_FASTBOOT*/
 #include "../drivers/video/mxcfb.h"
+#include <pwm.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -396,8 +397,11 @@ void do_enable_parallel_lcd(struct display_info_t const *dev)
 
 	gpio_direction_output(LCD_POWER_ENABLE, 0);
 
-	/* Set Brightness to high */
-	gpio_direction_output(BKL_DISPLAY_PWM_GPIO, 1);
+	/* Set Brightness 100% */
+	if(pwm_init(4,0,0)==0) {
+		pwm_config(4,10000,10000);
+		pwm_enable(4);
+	}
 }
 
 struct display_info_t const displays[] = {
