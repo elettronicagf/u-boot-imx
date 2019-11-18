@@ -181,6 +181,7 @@
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"update_md5=\0" \
+	"logo=logo-boot.bmp;\0" \
 	"g_ether_args=g_ether.dev_addr=58:05:56:00:04:5e g_ether.host_addr=58:05:56:00:04:5d\0" \
 	"ip_dyn=yes\0" \
 	"destroyenv=sf probe; gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
@@ -228,16 +229,16 @@
 				"echo invalid display selection ${panel}; " \
 			"fi;\0" \
 	"check_update_header=egf_update_validate_header " __stringify(CFG_UPDATE_PACKAGE_LOADADDR) "\0" \
-	"display_update_logo=fatload mem 0 " __stringify(CFG_LOGO_LOADADDR)" logo.bmp;bmp display " __stringify(CFG_LOGO_LOADADDR)" ;\0" \
+	"display_update_logo=fatload mem 0 " __stringify(CFG_LOGO_LOADADDR)" ${logo};bmp display " __stringify(CFG_LOGO_LOADADDR)" ;\0" \
 	"loadfdt_update=fatload mem 0 ${fdt_addr} ${fdt_file}\0" \
 	"loadimage_update=fatload mem 0 ${loadaddr} ${image}\0" \
 	"start_ota=egf_ota_start\0" \
 	"loadfdt_usb=fatload usb 0 ${fdt_addr} ${fdt_file}\0" \
 	"loadimage_usb=fatload usb 0 ${loadaddr} ${image}\0" \
-	"emmcargs=setenv bootargs ${bootargs_base} ${smp} ${g_ether_args} root=/dev/mmcblk0p2 rootfstype=ext4 rootwait rw \0" \
+	"emmcargs=setenv bootargs ${bootargs_base} ${smp} ${g_ether_args} panel=${panel} root=/dev/mmcblk0p2 rootfstype=ext4 rootwait rw \0" \
 	"loadimage_emmc=fatload mmc 0 ${loadaddr} ${image}\0" \
 	"loadfdt_emmc=fatload mmc 0 ${fdt_addr} ${fdt_file}\0" \
-	"loadsplash_emmc=if fatload mmc 0 0x80000000 logo.bmp; then bmp d 0x80000000; fi;\0" \
+	"loadsplash_emmc=if fatload mmc 0 0x80000000 ${logo}; then bmp d 0x80000000; fi;\0" \
 	"usbargs=setenv bootargs console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel}\0" \
 	"usbboot=echo Try Booting from USB...;" \
 			"usb start;" \
@@ -245,7 +246,7 @@
 				"if run loadimage_usb; then " \
 					"echo Booting from USB key; " \
 					"setenv usbargs ${usbargs} root=/dev/sda2 rootwait rw; " \
-					"fatload usb 0 0x80000000 /logo.bmp;bmp d 0x80000000;" \
+					"fatload usb 0 0x80000000 ${logo};bmp d 0x80000000;" \
 					"run usbargs; " \
 					"run fix_dt; " \
 					"bootz ${loadaddr} - ${fdt_addr};" \
@@ -294,9 +295,9 @@
 		"if run loadfdt_emmc; then " \
 			"if run loadimage_emmc; then " \
 				"echo Booting from eMMC Card; " \
-				"run fix_dt; " \
+			    "run loadfdt_emmc; "\
+			    "run fix_dt; " \
 				"run emmcargs; " \
-				"run loadsplash_emmc;" \
 				"echo ${bootargs}; " \
 				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"fi; " \
@@ -304,8 +305,10 @@
 
 
 #define CONFIG_BOOTCOMMAND \
+	   "setenv splashpos m,m; " \
+	   "mmc rescan; " \
+	   "run loadsplash_emmc;" \
 	   "memblk init;usb reset;" \
-	   "gpio clear " __stringify(CFG_LCD_POWER_ENABLE) ";" \
 	   "run usbupdate;" \
 	   "run otaupdate;" \
 	   "run usbboot;" \
