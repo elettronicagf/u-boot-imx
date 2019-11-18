@@ -144,6 +144,7 @@
 		"fi;" \
 		"sf lock;" \
 		"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
+		"mw.l 20e01b8 5 1;" \
 		"gpio set " __stringify(CFG_LCD_POWER_ENABLE) ";\0 "
 #else
 #define CONFIG_MFG_ENV_SETTINGS \
@@ -450,11 +451,12 @@
 #define CONFIG_SPLASH_SCREEN_ALIGN
 #define CONFIG_CMD_BMP
 
-#define CONFIG_SYS_CONSOLE_FG_COL 0x00
-#define CONFIG_SYS_CONSOLE_BG_COL 0xFF
+#define CONFIG_SYS_CONSOLE_FG_COL 0xFF
+#define CONFIG_SYS_CONSOLE_BG_COL 0x00
 
 #ifdef CONFIG_WID
-
+#define CONFIG_VIDEO_LOGO
+#define CONFIG_CONSOLE_EXTRA_INFO
 #else
 
 #endif
