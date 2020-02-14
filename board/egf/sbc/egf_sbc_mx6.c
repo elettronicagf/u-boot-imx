@@ -433,6 +433,27 @@ struct display_info_t const displays[] = {
 	.detect = NULL,
 	.enable	= do_enable_parallel_lcd,
 	.mode	= {
+		.name			= "EGF_BLC1185",
+		.xres           = 800,
+		.yres           = 480,
+		.pixclock       = 30000,
+		.left_margin    = 210,
+		.right_margin   = 46,
+		.upper_margin   = 22,
+		.lower_margin   = 20,
+		.hsync_len      = 26,
+		.vsync_len      = 3,
+		.sync           = FB_SYNC_CLK_LAT_FALL,
+		.vmode          = FB_VMODE_NONINTERLACED
+	}
+},
+{
+	.bus = MX6UL_LCDIF1_BASE_ADDR,
+	.addr = 0,
+	.pixfmt = 24,
+	.detect = NULL,
+	.enable	= do_enable_parallel_lcd,
+	.mode	= {
 		.name			= "EGF_BLC1182",
 		.xres           = 1280,
 		.yres           = 800,

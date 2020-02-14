@@ -195,36 +195,49 @@
 		     	 "fdt rm EGF_BLC1165; " \
 		     	 "fdt rm EGF_BLC1177; " \
 		     	 "fdt rm EGF_BLC1182; " \
+				 "fdt rm EGF_BLC1185; " \
 		    "elif test \"${panel}\" = \"EGF_BLC1155\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1156; " \
 		     	 "fdt rm EGF_BLC1165; " \
 		     	 "fdt rm EGF_BLC1177; " \
 		     	 "fdt rm EGF_BLC1182; " \
+				 "fdt rm EGF_BLC1185; " \
 		    "elif test \"${panel}\" = \"EGF_BLC1156\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1155; " \
 		     	 "fdt rm EGF_BLC1165; " \
 		     	 "fdt rm EGF_BLC1177; " \
 		     	 "fdt rm EGF_BLC1182; " \
+				 "fdt rm EGF_BLC1185; " \
 		     "elif test \"${panel}\" = \"EGF_BLC1165\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1155; " \
 		     	 "fdt rm EGF_BLC1156; " \
 		     	 "fdt rm EGF_BLC1177; " \
 		     	 "fdt rm EGF_BLC1182; " \
+				 "fdt rm EGF_BLC1185; " \
 		     "elif test \"${panel}\" = \"EGF_BLC1177\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1155; " \
 		     	 "fdt rm EGF_BLC1156; " \
 		     	 "fdt rm EGF_BLC1165; " \
 		     	 "fdt rm EGF_BLC1182; " \
+				 "fdt rm EGF_BLC1185; " \
 		     "elif test \"${panel}\" = \"EGF_BLC1182\"; then " \
 		     	 "fdt rm EGF_BLC1154; " \
 		     	 "fdt rm EGF_BLC1155; " \
 		     	 "fdt rm EGF_BLC1156; " \
 		     	 "fdt rm EGF_BLC1165; " \
 				 "fdt rm EGF_BLC1177; " \
+				 "fdt rm EGF_BLC1185; " \
+		     "elif test \"${panel}\" = \"EGF_BLC1185\"; then " \
+		     	 "fdt rm EGF_BLC1154; " \
+		     	 "fdt rm EGF_BLC1155; " \
+		     	 "fdt rm EGF_BLC1156; " \
+		     	 "fdt rm EGF_BLC1165; " \
+				 "fdt rm EGF_BLC1177; " \
+				 "fdt rm EGF_BLC1182; " \
 			"else " \
 				"echo invalid display selection ${panel}; " \
 			"fi;\0" \
