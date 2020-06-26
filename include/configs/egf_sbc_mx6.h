@@ -184,6 +184,7 @@
 	"logo=logo-boot.bmp\0" \
 	"g_ether_args=g_ether.dev_addr=58:05:56:00:04:5e g_ether.host_addr=58:05:56:00:04:5d\0" \
 	"ip_dyn=yes\0" \
+	"usb_pgood_delay=1600\0" \
 	"destroyenv=sf probe; gpio set " __stringify(CONFIG_SF_WPn_GPIO) ";" \
 			"sf unlock; sf erase 0x1E0000 0x10000;sf lock;" \
 			"gpio clear " __stringify(CONFIG_SF_WPn_GPIO) ";" \
