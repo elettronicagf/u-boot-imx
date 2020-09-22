@@ -327,18 +327,6 @@ static void my_wifi_init_mux(void)
 //***************************
 //* expansion connector CN1 *
 //***************************
-static struct i2c_pads_info i2c_pad_info2 = {
-	.scl = {
-		.i2c_mode =  MX6_PAD_GPIO1_IO00__I2C2_SCL 			| MUX_PAD_CTRL(I2C_PAD_CTRL),
-		.gpio_mode = MX6_PAD_GPIO1_IO00__GPIO1_IO00 		| MUX_PAD_CTRL(I2C_PAD_CTRL),
-		.gp = IMX_GPIO_NR(1, 0),
-	},
-	.sda = {
-		.i2c_mode = MX6_PAD_UART5_RX_DATA__I2C2_SDA 		| MUX_PAD_CTRL(I2C_PAD_CTRL),
-		.gpio_mode = MX6_PAD_UART5_RX_DATA__GPIO1_IO31	 	| MUX_PAD_CTRL(I2C_PAD_CTRL),
-		.gp = IMX_GPIO_NR(1, 31),
-	},
-};
 
 static iomux_v3_cfg_t const ecspi1_pads[] = {
 	MX6_PAD_CSI_DATA04__ECSPI1_SCLK | MUX_PAD_CTRL(SPI_PAD_CTRL),
@@ -361,6 +349,8 @@ static iomux_v3_cfg_t const cn1_gpio_pads[] = {
 	MX6_PAD_JTAG_TDO__GPIO1_IO12	  | DIO_PUP_PAD_CFG,
 	MX6_PAD_JTAG_TMS__GPIO1_IO11	  | DIO_PUP_PAD_CFG, 	//SPI1_CS0
 	MX6_PAD_CSI_DATA05__GPIO4_IO26    | DIO_PUP_PAD_CFG,    //SPI2_CS0
+	MX6_PAD_GPIO1_IO00__GPIO1_IO00	  | DIO_PUP_PAD_CFG,
+	MX6_PAD_UART5_RX_DATA__GPIO1_IO31 | DIO_PUP_PAD_CFG,
 };
 
 static iomux_v3_cfg_t const uart5_pads[] = {
@@ -392,7 +382,6 @@ static iomux_v3_cfg_t const adc_pads[] = {
 
 static void expansion_connector_init_mux_ull(void)
 {
-	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info2);
 	imx_iomux_v3_setup_multiple_pads(cn1_gpio_pads, ARRAY_SIZE(cn1_gpio_pads));
 	imx_iomux_v3_setup_multiple_pads(ecspi1_pads, ARRAY_SIZE(ecspi1_pads));
 	imx_iomux_v3_setup_multiple_pads(ecspi2_pads, ARRAY_SIZE(ecspi2_pads));
