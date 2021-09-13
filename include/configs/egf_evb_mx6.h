@@ -255,6 +255,7 @@
 	"fdt_addr=0x18000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
+	"splashpos=12,7\0" \
 	"g_ether_args=g_cdc.dev_addr=58:05:56:00:04:5e g_cdc.host_addr=58:05:56:00:04:5d\0"\
 	"fdt_high=0xffffffff\0"	  \
 	"set_bootargs_base=setenv bootargs_base console=${console},${baudrate} ${smp} ${g_ether_args} panel=${panel} pcb_rev=${pcb_rev}\0" \
@@ -748,7 +749,7 @@
 /*#define CONFIG_MXC_EPDC*/
 
 #define CONFIG_CMD_BMP
-#define CONFIG_CONSOLE_EXTRA_INFO
+/*#define CONFIG_CONSOLE_EXTRA_INFO*/
 /*
  * SPLASH SCREEN Configs
  */
