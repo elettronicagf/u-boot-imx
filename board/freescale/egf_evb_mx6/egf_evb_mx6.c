@@ -1088,7 +1088,7 @@ int board_eth_init(bd_t *bis)
 	gpio_direction_output(IMX_GPIO_NR(1, 25),0);
 	udelay (500);
 	gpio_set_value(IMX_GPIO_NR(1, 25), 1);
-	udelay (500);
+	udelay (60000);
 
 	return cpu_eth_init(bis);
 }
